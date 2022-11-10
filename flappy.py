@@ -2,6 +2,7 @@ import pygame
 from pygame.locals import *
 import random
 
+"This is Aum"
 pygame.init()
 
 clock = pygame.time.Clock()
