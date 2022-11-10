@@ -3,6 +3,7 @@ from pygame.locals import *
 import random
 
 "This is Aum"
+"This is Flame"
 #hello, my name is Atom
 pygame.init()
 
