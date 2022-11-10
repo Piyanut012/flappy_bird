@@ -3,6 +3,7 @@ from pygame.locals import *
 import random
 
 "This is Aum"
+#hello, my name is Atom
 pygame.init()
 
 clock = pygame.time.Clock()
