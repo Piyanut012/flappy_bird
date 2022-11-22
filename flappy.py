@@ -5,6 +5,7 @@ import random
 "This is Aum"
 "This is Flame"
 #hello, my name is Atom
+#i am mart
 pygame.init()
 
 clock = pygame.time.Clock()
