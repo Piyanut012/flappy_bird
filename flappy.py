@@ -7,7 +7,8 @@ import random
 #hello, my name is Atom
 #i am mart
 #Yes!
-#Mile
+#Mile 
+#Yes sir!
 pygame.init()
 
 clock = pygame.time.Clock()
