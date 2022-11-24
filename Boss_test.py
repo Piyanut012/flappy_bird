@@ -46,7 +46,7 @@ ani_cd = 150
 frame = 0
 
 for x in range(ani_frames):
-    ani_list.append(sprite_sheet.get_image(x, 48, 48, 4, BLACK))
+    ani_list.append(sprite_sheet.get_image(x, 48, 48, 3, BLACK))
 
 run = True
 while run:
