@@ -46,7 +46,7 @@ ani_cd = 150
 frame = 0
 
 for x in range(ani_frames):
-    ani_list.append(sprite_sheet.get_image(x, 48, 48, 2.5, BLACK))
+    ani_list.append(sprite_sheet.get_image(x, 48, 48, 4, BLACK))
 
 run = True
 while run:
@@ -65,7 +65,7 @@ while run:
             frame = 0
 
     #draw witch
-    screen.blit(ani_list[frame], (700, 200))
+    screen.blit(ani_list[frame], (600, 200))
 
 	#draw and scroll the ground
     screen.blit(ground_img, (ground_scroll, 768))
