@@ -29,14 +29,16 @@ ground_scroll = 0
 scroll_speed = 4
 flying = False
 game_over = False
-pipe_gap = 200
+<<<<<<< HEAD
+pipe_gap = 250
+=======
+>>>>>>> parent of 950c3b2 (Merge pull request #2 from Piyanut012/Mart)
 immortal = 0
-
+pipe_gap = 150
 pipe_frequency = 1500 #milliseconds
 last_pipe = pygame.time.get_ticks() - pipe_frequency
 score = 0
 pass_pipe = False
-check = False
 
 #load images
 bg = pygame.image.load('img/bg.png')
@@ -245,7 +247,6 @@ while run:
 		if button.draw():
 			game_over = False
 			score = reset_game()
-			check = True
 			immortal = 0
 
 
