@@ -6,7 +6,7 @@ import random
 #This is Flame"
 #hello, my name is Atom
 #i am mart
-#Mile 
+#Mile
 pygame.init()
 
 clock = pygame.time.Clock()
@@ -35,7 +35,6 @@ pipe_frequency = 1500 #milliseconds
 last_pipe = pygame.time.get_ticks() - pipe_frequency
 score = 0
 pass_pipe = False
-check = False
 
 #load images
 bg = pygame.image.load('img/bg.png')
@@ -244,7 +243,6 @@ while run:
 		if button.draw():
 			game_over = False
 			score = reset_game()
-			check = True
 			immortal = 0
 
 
