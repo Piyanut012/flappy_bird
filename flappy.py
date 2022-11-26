@@ -43,6 +43,35 @@ bg = pygame.image.load('img/bg.png')
 ground_img = pygame.image.load('img/ground.png')
 button_img = pygame.image.load('img/restart.png')
 heart_img = pygame.image.load('img/heart.png')
+witch_sprites = pygame.image.load('Boss/Blue_witch/B_witch_charge.png').convert_alpha()
+
+#set colours
+BLACK = (0, 0, 0)
+
+#create sprite class and get image sprites
+class SpriteSheet():
+    def __init__(self, image):
+        self.sheet = image
+    
+    def get_image(self, frame, width, height, scale, colour):
+        image = pygame.Surface((width, height)).convert_alpha()
+        image.blit(self.sheet, (0, 0), (0, (frame*height), width, height))
+        image = pygame.transform.scale(image, (width*scale, height*scale))
+        image.set_colorkey(colour)
+        return image
+
+sprite_sheet = SpriteSheet(witch_sprites)
+
+#create animation list
+ani_list = []
+ani_frames = 5
+last_update = pygame.time.get_ticks()
+ani_cd = 150
+frame = 0
+witch_enter = 900
+
+for x in range(ani_frames):
+    ani_list.append(sprite_sheet.get_image(x, 48, 48, 3, BLACK))
 
 
 #function for outputting text onto the screen
@@ -178,6 +207,22 @@ while run:
 
 	#draw background
 	screen.blit(bg, (0,0))
+
+	#update animation
+	current_time = pygame.time.get_ticks()
+	if current_time - last_update >= ani_cd:
+		frame += 1
+		last_update = current_time
+		if frame >= len(ani_list):
+			frame = 0
+
+    #draw witch
+	for _ in range(2):
+		screen.blit(ani_list[frame], (witch_enter, 180))
+		if witch_enter == 700:
+			screen.blit(ani_list[frame], (witch_enter, 180))
+			break
+		witch_enter -= 2
 
 	pipe_group.draw(screen)
 	# immortal
