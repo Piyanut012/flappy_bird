@@ -44,6 +44,7 @@ ani_frames = 5
 last_update = pygame.time.get_ticks()
 ani_cd = 150
 frame = 0
+witch_enter = 900
 
 for x in range(ani_frames):
     ani_list.append(sprite_sheet.get_image(x, 48, 48, 3, BLACK))
@@ -65,7 +66,12 @@ while run:
             frame = 0
 
     #draw witch
-    screen.blit(ani_list[frame], (600, 200))
+    for _ in range(2):
+        screen.blit(ani_list[frame], (witch_enter, 200))
+        if witch_enter == 700:
+            screen.blit(ani_list[frame], (witch_enter, 200))
+            break
+        witch_enter -= 2
 
 	#draw and scroll the ground
     screen.blit(ground_img, (ground_scroll, 768))
