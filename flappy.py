@@ -29,13 +29,15 @@ ground_scroll = 0
 scroll_speed = 4
 flying = False
 game_over = False
-pipe_gap = 250
+pipe_gap = 180
 immortal = 0
-
 pipe_frequency = 1500 #milliseconds
 last_pipe = pygame.time.get_ticks() - pipe_frequency
 score = 0
 pass_pipe = False
+score_meet_boss = 3
+check_no_boss = True
+immortal = 0
 check = False
 
 #load images
@@ -72,6 +74,7 @@ witch_enter = 900
 
 for x in range(ani_frames):
     ani_list.append(sprite_sheet.get_image(x, 48, 48, 3, BLACK))
+
 
 
 #function for outputting text onto the screen
@@ -216,7 +219,7 @@ while run:
 		if frame >= len(ani_list):
 			frame = 0
 
-    #draw witch
+  #draw witch
 	for _ in range(2):
 		screen.blit(ani_list[frame], (witch_enter, 180))
 		if witch_enter == 700:
@@ -225,7 +228,7 @@ while run:
 		witch_enter -= 2
 
 	pipe_group.draw(screen)
-	# immortal
+	# for immortal
 	if immortal%2 == 0 or game_over == True:
 		bird_group.draw(screen)
 	bird_group.update()
@@ -237,6 +240,11 @@ while run:
 	#draw and scroll the ground
 	screen.blit(ground_img, (ground_scroll, 768))
 
+	#check boss
+	if score >= score_meet_boss:
+		score_meet_boss += 50
+		check_no_boss = False
+
 	#check the score
 	if len(pipe_group) > 0:
 		if bird_group.sprites()[0].rect.left > pipe_group.sprites()[0].rect.left\
@@ -247,10 +255,9 @@ while run:
 			if bird_group.sprites()[0].rect.left > pipe_group.sprites()[0].rect.right:
 				score += 1
 				pass_pipe = False
-	draw_text(str(score), font, white, int(screen_width / 2), 20)
+  draw_text(str(score), font, white, int(screen_width / 2), 20)
 
-	#look for collision
-	# cooldown for immortal 
+	#look for collision and cooldown for immortal  
 	if immortal > 0:
 		immortal -= 1
 	elif pygame.sprite.groupcollide(bird_group, pipe_group, False, False):
@@ -267,7 +274,7 @@ while run:
 	if flying == True and game_over == False:
 		#generate new pipes
 		time_now = pygame.time.get_ticks()
-		if time_now - last_pipe > pipe_frequency:
+		if time_now - last_pipe > pipe_frequency and check_no_boss:
 			pipe_height = random.randint(-100, 100)
 			btm_pipe = Pipe(screen_width, int(screen_height / 2) + pipe_height, -1)
 			top_pipe = Pipe(screen_width, int(screen_height / 2) + pipe_height, 1)
@@ -280,7 +287,6 @@ while run:
 		ground_scroll -= scroll_speed
 		if abs(ground_scroll) > 35:
 			ground_scroll = 0
-	
 
 	# check for game over and reset
 	# check heart
