@@ -45,6 +45,7 @@ last_update = pygame.time.get_ticks()
 ani_cd = 150
 frame = 0
 witch_enter = 900
+witch_idle = 180
 
 for x in range(ani_frames):
     ani_list.append(sprite_sheet.get_image(x, 48, 48, 3, BLACK))
@@ -67,9 +68,9 @@ while run:
 
     #draw witch
     for _ in range(2):
-        screen.blit(ani_list[frame], (witch_enter, 200))
+        screen.blit(ani_list[frame], (witch_enter, witch_idle))
         if witch_enter == 700:
-            screen.blit(ani_list[frame], (witch_enter, 200))
+            screen.blit(ani_list[frame], (witch_enter, witch_idle))
             break
         witch_enter -= 2
 
