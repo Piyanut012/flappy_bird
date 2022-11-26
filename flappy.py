@@ -29,18 +29,54 @@ ground_scroll = 0
 scroll_speed = 4
 flying = False
 game_over = False
-pipe_gap =200
+pipe_gap = 180
+immortal = 0
 pipe_frequency = 1500 #milliseconds
 last_pipe = pygame.time.get_ticks() - pipe_frequency
 score = 0
 pass_pipe = False
 boss = False
 
+score_meet_boss = 3
+check_no_boss = True
+immortal = 0
+check = False
 
 #load images
 bg = pygame.image.load('img/bg.png')
 ground_img = pygame.image.load('img/ground.png')
 button_img = pygame.image.load('img/restart.png')
+
+heart_img = pygame.image.load('img/heart.png')
+witch_sprites = pygame.image.load('Boss/Blue_witch/B_witch_charge.png').convert_alpha()
+
+#set colours
+BLACK = (0, 0, 0)
+
+#create sprite class and get image sprites
+class SpriteSheet():
+    def __init__(self, image):
+        self.sheet = image
+    
+    def get_image(self, frame, width, height, scale, colour):
+        image = pygame.Surface((width, height)).convert_alpha()
+        image.blit(self.sheet, (0, 0), (0, (frame*height), width, height))
+        image = pygame.transform.scale(image, (width*scale, height*scale))
+        image.set_colorkey(colour)
+        return image
+
+sprite_sheet = SpriteSheet(witch_sprites)
+
+#create animation list
+ani_list = []
+ani_frames = 5
+last_update = pygame.time.get_ticks()
+ani_cd = 150
+frame = 0
+witch_enter = 900
+
+for x in range(ani_frames):
+    ani_list.append(sprite_sheet.get_image(x, 48, 48, 3, BLACK))
 
 
 #function for outputting text onto the screen
@@ -187,13 +223,38 @@ while run:
 	#draw background
 	screen.blit(bg, (0,0))
 
+	#update animation
+	current_time = pygame.time.get_ticks()
+	if current_time - last_update >= ani_cd:
+		frame += 1
+		last_update = current_time
+		if frame >= len(ani_list):
+			frame = 0
+
+  #draw witch
+	for _ in range(2):
+		screen.blit(ani_list[frame], (witch_enter, 180))
+		if witch_enter == 700:
+			screen.blit(ani_list[frame], (witch_enter, 180))
+			break
+		witch_enter -= 2
+
 	pipe_group.draw(screen)
-	bird_group.draw(screen)
+
+	# for immortal
+	if immortal%2 == 0 or game_over == True:
+		bird_group.draw(screen)
+
 	bird_group.update()
 	bullet_group.draw(screen)
 
 	#draw and scroll the ground
 	screen.blit(ground_img, (ground_scroll, 768))
+
+	#check boss
+	if score >= score_meet_boss:
+		score_meet_boss += 50
+		check_no_boss = False
 
 	#check the score
 	if len(pipe_group) > 0:
@@ -205,12 +266,17 @@ while run:
 			if bird_group.sprites()[0].rect.left > pipe_group.sprites()[0].rect.right:
 				score += 1
 				pass_pipe = False
-	draw_text(str(score), font, white, int(screen_width / 2), 20)
+  draw_text(str(score), font, white, int(screen_width / 2), 20)
 
+	#look for collision and cooldown for immortal  
+	if immortal > 0:
+		immortal -= 1
+	elif pygame.sprite.groupcollide(bird_group, pipe_group, False, False):
+			flappy.heart -= 1
+			immortal = 35 
+	if flappy.rect.top < 0:
+		flappy.heart = 0
 
-	#look for collision
-	if pygame.sprite.groupcollide(bird_group, pipe_group, False, False) or flappy.rect.top < 0:
-		game_over = True
 	#once the bird has hit the ground it's game over and no longer flying
 	if flappy.rect.bottom >= 768:
 		game_over = True
@@ -220,7 +286,7 @@ while run:
 	if flying == True and game_over == False and boss == False:
 		#generate new pipes
 		time_now = pygame.time.get_ticks()
-		if time_now - last_pipe > pipe_frequency:
+		if time_now - last_pipe > pipe_frequency and check_no_boss:
 			pipe_height = random.randint(-100, 100)
 			btm_pipe = Pipe(screen_width, int(screen_height / 2) + pipe_height, -1)
 			top_pipe = Pipe(screen_width, int(screen_height / 2) + pipe_height, 1)
@@ -233,6 +299,7 @@ while run:
 		ground_scroll -= scroll_speed
 		if abs(ground_scroll) > 35:
 			ground_scroll = 0
+
 	if flying == True and game_over == False and boss == True:
 		#generate new pipes
 		time_now = pygame.time.get_ticks()
