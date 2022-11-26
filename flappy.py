@@ -2,6 +2,11 @@ import pygame
 from pygame.locals import *
 import random
 
+#This is Aum"
+#This is Flame"
+#hello, my name is Atom
+#i am mart
+#Mile
 pygame.init()
 
 clock = pygame.time.Clock()
@@ -25,6 +30,7 @@ scroll_speed = 4
 flying = False
 game_over = False
 pipe_gap = 180
+immortal = 0
 pipe_frequency = 1500 #milliseconds
 last_pipe = pygame.time.get_ticks() - pipe_frequency
 score = 0
@@ -32,12 +38,43 @@ pass_pipe = False
 score_meet_boss = 3
 check_no_boss = True
 immortal = 0
+check = False
 
 #load images
 bg = pygame.image.load('img/bg.png')
 ground_img = pygame.image.load('img/ground.png')
 button_img = pygame.image.load('img/restart.png')
 heart_img = pygame.image.load('img/heart.png')
+witch_sprites = pygame.image.load('Boss/Blue_witch/B_witch_charge.png').convert_alpha()
+
+#set colours
+BLACK = (0, 0, 0)
+
+#create sprite class and get image sprites
+class SpriteSheet():
+    def __init__(self, image):
+        self.sheet = image
+    
+    def get_image(self, frame, width, height, scale, colour):
+        image = pygame.Surface((width, height)).convert_alpha()
+        image.blit(self.sheet, (0, 0), (0, (frame*height), width, height))
+        image = pygame.transform.scale(image, (width*scale, height*scale))
+        image.set_colorkey(colour)
+        return image
+
+sprite_sheet = SpriteSheet(witch_sprites)
+
+#create animation list
+ani_list = []
+ani_frames = 5
+last_update = pygame.time.get_ticks()
+ani_cd = 150
+frame = 0
+witch_enter = 900
+
+for x in range(ani_frames):
+    ani_list.append(sprite_sheet.get_image(x, 48, 48, 3, BLACK))
+
 
 
 #function for outputting text onto the screen
@@ -174,6 +211,22 @@ while run:
 	#draw background
 	screen.blit(bg, (0,0))
 
+	#update animation
+	current_time = pygame.time.get_ticks()
+	if current_time - last_update >= ani_cd:
+		frame += 1
+		last_update = current_time
+		if frame >= len(ani_list):
+			frame = 0
+
+  #draw witch
+	for _ in range(2):
+		screen.blit(ani_list[frame], (witch_enter, 180))
+		if witch_enter == 700:
+			screen.blit(ani_list[frame], (witch_enter, 180))
+			break
+		witch_enter -= 2
+
 	pipe_group.draw(screen)
 	# for immortal
 	if immortal%2 == 0 or game_over == True:
@@ -202,7 +255,7 @@ while run:
 			if bird_group.sprites()[0].rect.left > pipe_group.sprites()[0].rect.right:
 				score += 1
 				pass_pipe = False
-	draw_text(str(score), font, white, int(screen_width / 2), 20)
+  draw_text(str(score), font, white, int(screen_width / 2), 20)
 
 	#look for collision and cooldown for immortal  
 	if immortal > 0:
@@ -243,6 +296,7 @@ while run:
 		if button.draw():
 			game_over = False
 			score = reset_game()
+			check = True
 			immortal = 0
 
 
