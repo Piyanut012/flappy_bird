@@ -24,17 +24,20 @@ ground_scroll = 0
 scroll_speed = 4
 flying = False
 game_over = False
-pipe_gap = 150
+pipe_gap = 180
 pipe_frequency = 1500 #milliseconds
 last_pipe = pygame.time.get_ticks() - pipe_frequency
 score = 0
 pass_pipe = False
-
+score_meet_boss = 3
+check_no_boss = True
+immortal = 0
 
 #load images
 bg = pygame.image.load('img/bg.png')
 ground_img = pygame.image.load('img/ground.png')
 button_img = pygame.image.load('img/restart.png')
+heart_img = pygame.image.load('img/heart.png')
 
 
 #function for outputting text onto the screen
@@ -46,17 +49,19 @@ def reset_game():
 	pipe_group.empty()
 	flappy.rect.x = 100
 	flappy.rect.y = int(screen_height / 2)
+	flappy.heart = 3
 	score = 0
 	return score
 
 
 class Bird(pygame.sprite.Sprite):
 
-	def __init__(self, x, y):
+	def __init__(self, x, y, heart):
 		pygame.sprite.Sprite.__init__(self)
 		self.images = []
 		self.index = 0
 		self.counter = 0
+		self.heart = heart
 		for num in range (1, 4):
 			img = pygame.image.load(f"img/bird{num}.png")
 			self.images.append(img)
@@ -153,7 +158,7 @@ class Button():
 pipe_group = pygame.sprite.Group()
 bird_group = pygame.sprite.Group()
 
-flappy = Bird(100, int(screen_height / 2))
+flappy = Bird(100, int(screen_height / 2), 3)
 
 bird_group.add(flappy)
 
@@ -170,11 +175,22 @@ while run:
 	screen.blit(bg, (0,0))
 
 	pipe_group.draw(screen)
-	bird_group.draw(screen)
+	# for immortal
+	if immortal%2 == 0 or game_over == True:
+		bird_group.draw(screen)
 	bird_group.update()
+
+	#draw heart
+	for x in range(flappy.heart):
+		screen.blit(heart_img, (10 + (x * 30), 10))
 
 	#draw and scroll the ground
 	screen.blit(ground_img, (ground_scroll, 768))
+
+	#check boss
+	if score >= score_meet_boss:
+		score_meet_boss += 50
+		check_no_boss = False
 
 	#check the score
 	if len(pipe_group) > 0:
@@ -188,20 +204,24 @@ while run:
 				pass_pipe = False
 	draw_text(str(score), font, white, int(screen_width / 2), 20)
 
-
-	#look for collision
-	if pygame.sprite.groupcollide(bird_group, pipe_group, False, False) or flappy.rect.top < 0:
-		game_over = True
+	#look for collision and cooldown for immortal  
+	if immortal > 0:
+		immortal -= 1
+	elif pygame.sprite.groupcollide(bird_group, pipe_group, False, False):
+			flappy.heart -= 1
+			immortal = 35 
+	if flappy.rect.top < 0:
+		flappy.heart = 0
 	#once the bird has hit the ground it's game over and no longer flying
 	if flappy.rect.bottom >= 768:
-		game_over = True
+		flappy.heart = 0
 		flying = False
 
 
 	if flying == True and game_over == False:
 		#generate new pipes
 		time_now = pygame.time.get_ticks()
-		if time_now - last_pipe > pipe_frequency:
+		if time_now - last_pipe > pipe_frequency and check_no_boss:
 			pipe_height = random.randint(-100, 100)
 			btm_pipe = Pipe(screen_width, int(screen_height / 2) + pipe_height, -1)
 			top_pipe = Pipe(screen_width, int(screen_height / 2) + pipe_height, 1)
@@ -214,13 +234,16 @@ while run:
 		ground_scroll -= scroll_speed
 		if abs(ground_scroll) > 35:
 			ground_scroll = 0
-	
 
-	#check for game over and reset
+	# check for game over and reset
+	# check heart
+	if flappy.heart == 0:
+		game_over = True
 	if game_over == True:
 		if button.draw():
 			game_over = False
 			score = reset_game()
+			immortal = 0
 
 
 	for event in pygame.event.get():
