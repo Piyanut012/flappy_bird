@@ -113,7 +113,7 @@ class Pipe(pygame.sprite.Sprite):
 
 	def __init__(self, x, y, position):
 		pygame.sprite.Sprite.__init__(self)
-		self.image = pygame.image.load("img/pipe.png")
+		self.image = pygame.image.load("img/stonepipetest.png")
 		self.rect = self.image.get_rect()
 		#position variable determines if the pipe is coming from the bottom or top
 		#position 1 is from the top, -1 is from the bottom
