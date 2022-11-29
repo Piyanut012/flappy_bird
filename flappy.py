@@ -29,7 +29,7 @@ ground_scroll = 0
 scroll_speed = 4
 flying = False
 game_over = False
-pipe_gap = 150
+pipe_gap = 160
 immortal = 0
 pipe_frequency = 1500 #milliseconds
 last_pipe = pygame.time.get_ticks() - pipe_frequency
@@ -37,7 +37,8 @@ score = 0
 pass_pipe = False
 heart = 3
 boss = False
-score_meet_boss = 3
+score_meet_boss = 20
+star_score_meet_boss = 20
 immortal = 0
 
 
@@ -85,7 +86,7 @@ def reset_game():
 	pipe_group.empty()
 	flappy.rect.x = 100
 	flappy.rect.y = int(screen_height / 2)
-	flappy.heart = 3
+	flappy.heart = flappy.start_heart
 	score = 0
 	return score
 
@@ -98,6 +99,7 @@ class Bird(pygame.sprite.Sprite):
 		self.index = 0
 		self.counter = 0
 		self.heart = heart
+		self.start_heart = heart
 		for num in range (1, 4):
 			img = pygame.image.load(f"img/bird{num}.png")
 			self.images.append(img)
@@ -318,7 +320,7 @@ while run:
 			game_over = False
 			score = reset_game()
 			immortal = 0
-			score_meet_boss = 3
+			score_meet_boss = star_score_meet_boss
 			boss = False
 
 	for event in pygame.event.get():
