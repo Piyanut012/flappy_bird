@@ -29,12 +29,13 @@ ground_scroll = 0
 scroll_speed = 4
 flying = False
 game_over = False
-pipe_gap = 180
+pipe_gap = 150
 immortal = 0
 pipe_frequency = 1500 #milliseconds
 last_pipe = pygame.time.get_ticks() - pipe_frequency
 score = 0
 pass_pipe = False
+heart = 3
 boss = False
 score_meet_boss = 3
 immortal = 0
@@ -205,7 +206,7 @@ pipe_group = pygame.sprite.Group()
 bird_group = pygame.sprite.Group()
 bullet_group = pygame.sprite.Group()
 
-flappy = Bird(100, int(screen_height / 2), 3)
+flappy = Bird(100, int(screen_height / 2), heart)
 bird_group.add(flappy)
 
 
@@ -317,6 +318,7 @@ while run:
 			game_over = False
 			score = reset_game()
 			immortal = 0
+			score_meet_boss = 3
 			boss = False
 
 	for event in pygame.event.get():
