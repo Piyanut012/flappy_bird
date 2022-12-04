@@ -31,19 +31,26 @@ flying = False
 game_over = False
 pipe_gap = 160
 immortal = 0
-pipe_frequency = 1500 #milliseconds
+#milliseconds
+pipe_frequency = 1500
+bullet_frequency = 200
+item_frequency_boss = 15000
+start_bullet_frequency = bullet_frequency
+cooldown_bullet_item = 5000
 last_pipe = pygame.time.get_ticks() - pipe_frequency
 last_item = pygame.time.get_ticks() - pipe_frequency
+last_bullet = 0
 score = 0
 pass_pipe = False
 boss = False
-score_meet_boss = 23
+score_meet_boss = 8
 star_score_meet_boss = score_meet_boss
 immortal = 0
 heart = 3
 start_heart = heart
 collect_item = False
 rate_drop = 5 # %
+
 
 #load images
 bg = pygame.image.load('img/bg.png')
@@ -53,6 +60,7 @@ witch_sprites = pygame.image.load('Boss/Blue_witch/B_witch_charge.png').convert_
 
 heart_img = pygame.image.load('img/heart.png')
 lightning_img = pygame.image.load('img/lightning.png')
+lightning_img = pygame.transform.scale(lightning_img, (25, 50))
 #pick up boxes
 item_boxes = {
 	'Heart'		: heart_img,
@@ -102,12 +110,13 @@ def reset_game():
 
 class Bird(pygame.sprite.Sprite):
 
-	def __init__(self, x, y, heart):
+	def __init__(self, x, y, heart, bullet_frequency):
 		pygame.sprite.Sprite.__init__(self)
 		self.images = []
 		self.index = 0
 		self.counter = 0
 		self.heart = heart
+		self.bullet_frequency = bullet_frequency
 		for num in range (1, 4):
 			img = pygame.image.load(f"img/bird{num}.png")
 			self.images.append(img)
@@ -152,7 +161,6 @@ class Bird(pygame.sprite.Sprite):
 		else:
 			#point the bird at the ground
 			self.image = pygame.transform.rotate(self.images[self.index], -90)
-
 
 
 class Pipe(pygame.sprite.Sprite):
@@ -233,9 +241,10 @@ witch_enter = 900
 
 
 class Itembox(pygame.sprite.Sprite):
-	def __init__(self, x, y):
+	def __init__(self, item_type, x, y):
 		pygame.sprite.Sprite.__init__(self)
-		self.image = heart_img
+		self.item_type = item_type
+		self.image = item_boxes.get(item_type)
 		self.rect = self.image.get_rect()
 		self.rect.center = [x, y]
 
@@ -243,9 +252,13 @@ class Itembox(pygame.sprite.Sprite):
 		self.rect.x -= scroll_speed
 		if self.rect.right < 0:
 			self.kill()
-		elif pygame.sprite.collide_rect(self, flappy) and flappy.heart < start_heart:
-			flappy.heart += 1
-			self.kill()
+		elif pygame.sprite.collide_rect(self, flappy):
+			if self.item_type == "Heart" and flappy.heart < start_heart:
+				flappy.heart += 1
+				self.kill()
+			elif self.item_type == "Lightning":
+				flappy.bullet_frequency = flappy.bullet_frequency//4
+				self.kill()
 
 #group
 pipe_group = pygame.sprite.Group()
@@ -253,7 +266,7 @@ bird_group = pygame.sprite.Group()
 bullet_group = pygame.sprite.Group()
 item_group = pygame.sprite.Group()
 
-flappy = Bird(100, int(screen_height / 2), heart)
+flappy = Bird(100, int(screen_height / 2), heart, bullet_frequency)
 bird_group.add(flappy)
 
 #create restart button instance
@@ -334,6 +347,16 @@ while run:
 		flappy.heart = 0
 		flying = False
 
+	# cooldown for itme
+	if flappy.bullet_frequency < start_bullet_frequency:
+		time_now = pygame.time.get_ticks()
+		if last_bullet == 0:
+			last_bullet = time_now
+		if time_now - last_bullet > cooldown_bullet_item:
+			flappy.bullet_frequency = start_bullet_frequency
+			last_bullet = 0
+
+
 	if flying == True and game_over == False:
 		time_now = pygame.time.get_ticks()
 		#generate new pipes
@@ -346,20 +369,21 @@ while run:
 			pipe_group.add(top_pipe)
 			#generate heart
 			if random_drop <= rate_drop:
-				item_boxes = Itembox(btm_pipe.rect.x + 40, btm_pipe.rect.y - 80)
-				item_group.add(item_boxes)
+				item_box = Itembox("Heart", btm_pipe.rect.x + 40, btm_pipe.rect.y - 80)
+				item_group.add(item_box)
 			last_pipe = time_now
 		#generate bullet
 		elif boss and score == score_meet_boss - 48:
-			if time_now - last_pipe > pipe_frequency // 8:
+			if time_now - last_pipe > flappy.bullet_frequency:
 				shoot = Bullet(bird_group.sprites()[0].rect.centerx, \
 				bird_group.sprites()[0].rect.centery)
 				bullet_group.add(shoot)
 				last_pipe = time_now
-			if time_now - last_item > pipe_frequency*10:
+			if time_now - last_item > item_frequency_boss:
 				item_height = random.randint(-300, 100)
-				item_boxes = Itembox(screen_width, int(screen_height / 2) + item_height)
-				item_group.add(item_boxes)
+				item_type = random.choice(list(item_boxes.keys()))
+				item_box = Itembox(item_type, screen_width, int(screen_height / 2) + item_height)
+				item_group.add(item_box)
 				last_item = time_now
 
 		item_group.update()
