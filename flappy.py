@@ -37,13 +37,13 @@ last_item = pygame.time.get_ticks() - pipe_frequency
 score = 0
 pass_pipe = False
 boss = False
-score_meet_boss = 3
+score_meet_boss = 23
 star_score_meet_boss = score_meet_boss
 immortal = 0
 heart = 3
 start_heart = heart
 collect_item = False
-rate_drop = 10 # %
+rate_drop = 5 # %
 
 #load images
 bg = pygame.image.load('img/bg.png')
