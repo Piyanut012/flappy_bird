@@ -20,7 +20,7 @@ pygame.display.set_caption('Flappy Bird')
 
 #define font
 font = pygame.font.SysFont('Bauhaus 93', 60)
-
+font_highscore = pygame.font.SysFont('Bauhaus 93', 40)
 #define colours
 white = (255, 255, 255)
 
@@ -42,14 +42,18 @@ last_item = pygame.time.get_ticks() - pipe_frequency
 last_bullet = 0
 score = 0
 pass_pipe = False
-boss = False
-score_meet_boss = 8
+boss_check = False
+score_meet_boss = 3
 star_score_meet_boss = score_meet_boss
 immortal = 0
 heart = 3
 start_heart = heart
+heart_boss = 50
+start_heart_boss = heart_boss
 collect_item = False
-rate_drop = 5 # %
+rate_drop = 100 # %
+start_postion_x = 1000
+
 
 
 #load images
@@ -79,9 +83,12 @@ def reset_game():
 	pipe_group.empty()
 	bullet_group.empty()
 	item_group.empty()
+	boss_group.empty()
 	flappy.rect.x = 100
 	flappy.rect.y = int(screen_height / 2)
 	flappy.heart = start_heart
+	boss.rect.x = start_postion_x
+	boss.heart = start_heart_boss
 	score = 0
 	return score
 
@@ -151,16 +158,16 @@ class Bird(pygame.sprite.Sprite):
 
 class Pipe(pygame.sprite.Sprite):
 
-	def __init__(self, x, y, position):
+	def __init__(self, x, y, position_go):
 		pygame.sprite.Sprite.__init__(self)
 		self.image = pygame.image.load("img/stonepipetest.png")
 		self.rect = self.image.get_rect()
-		#position variable determines if the pipe is coming from the bottom or top
-		#position 1 is from the top, -1 is from the bottom
-		if position == 1:
+		#position_go variable determines if the pipe is coming from the bottom or top
+		#position_go 1 is from the top, -1 is from the bottom
+		if position_go == 1:
 			self.image = pygame.transform.flip(self.image, False, True)
 			self.rect.bottomleft = [x, y - int(pipe_gap / 2)]
-		elif position == -1:
+		elif position_go == -1:
 			self.rect.topleft = [x, y + int(pipe_gap / 2)]
 
 
@@ -180,10 +187,10 @@ class Button():
 	def draw(self):
 		action = False
 
-		#get mouse position
+		#get mouse position_go
 		pos = pygame.mouse.get_pos()
 
-		#check mouseover and clicked conditions
+		#self.position_go mouseover and clicked conditions
 		if self.rect.collidepoint(pos):
 			if pygame.mouse.get_pressed()[0] == 1:
 				action = True
@@ -204,27 +211,68 @@ class Bullet(pygame.sprite.Sprite):
 		self.rect.x += 10
 		if self.rect.left < 0:
 			self.kill()
+		elif pygame.sprite.collide_rect(self, boss):
+			boss.heart -= 1
+			self.kill()
 
 #create sprite class and get image sprites
-class SpriteSheet():
+class SpriteSheet_draw():
     def __init__(self, image):
         self.sheet = image
-    
+
     def get_image(self, frame, width, height, scale, colour):
         image = pygame.Surface((width, height)).convert_alpha()
         image.blit(self.sheet, (0, 0), (0, (frame*height), width, height))
         image = pygame.transform.scale(image, (width*scale, height*scale))
         image.set_colorkey(colour)
         return image
-sprite_sheet = SpriteSheet(witch_sprites)
+
+sprite_sheet = SpriteSheet_draw(witch_sprites)
 #create animation list
 ani_frames = 5
 ani_list = [sprite_sheet.get_image(x, 48, 48, 3, BLACK) for x in range(ani_frames)]
+
 last_update = pygame.time.get_ticks()
 ani_cd = 150
 frame = 0
 witch_enter = 900
 
+class SpriteSheet(pygame.sprite.Sprite):
+	
+	def __init__(self, images, x, y, heart, position_go):
+		pygame.sprite.Sprite.__init__(self)
+		self.index = 0
+		self.counter = 0
+		self.images = images
+		self.heart = heart
+		self.image = self.images[self.index]
+		self.rect = self.image.get_rect()
+		self.rect.center = [x, y]
+		self.position_go = position_go
+
+	def update(self):
+
+		self.counter += 1
+		cooldown = 5
+
+		if self.counter > cooldown:
+			self.counter = 0
+			self.index += 1
+			if self.index >= len(self.images):
+					self.index = 0 
+		self.image = self.images[self.index]
+
+		if self.rect.x > 700:
+			self.rect.x -= 2
+		else:
+			if self.position_go == 0:
+				self.position_go = random.randrange(50, 550, 2)
+			if self.rect.y < self.position_go:
+				self.rect.y += 2
+			elif self.rect.y > self.position_go:
+				self.rect.y -= 2
+			else:
+				self.position_go = random.randrange(50, 550, 2)
 
 class Itembox(pygame.sprite.Sprite):
 	def __init__(self, item_type, x, y):
@@ -251,9 +299,13 @@ pipe_group = pygame.sprite.Group()
 bird_group = pygame.sprite.Group()
 bullet_group = pygame.sprite.Group()
 item_group = pygame.sprite.Group()
+boss_group = pygame.sprite.Group()
 
 flappy = Bird(100, int(screen_height / 2), heart, bullet_frequency)
 bird_group.add(flappy)
+
+boss = SpriteSheet(ani_list, start_postion_x, 450, heart_boss, 0)
+
 
 #create restart button instance
 button = Button(screen_width // 2 - 50, screen_height // 2 - 100, button_img)
@@ -267,25 +319,9 @@ while run:
 	#draw background
 	screen.blit(bg, (0,0))
 
-	#update animation
-	current_time = pygame.time.get_ticks()
-	if current_time - last_update >= ani_cd:
-		frame += 1
-		last_update = current_time
-		if frame >= len(ani_list):
-			frame = 0
-
- 	#draw witch
-	if boss == True:
-		for _ in range(2):
-			screen.blit(ani_list[frame], (witch_enter, 180))
-			if witch_enter == 700:
-				screen.blit(ani_list[frame], (witch_enter, 180))
-				break
-			witch_enter -= 2
-
 	item_group.draw(screen)
 	pipe_group.draw(screen)
+	boss_group.draw(screen)
 	# for immortal
 	if immortal%2 == 0 or game_over == True:
 		bird_group.draw(screen)
@@ -300,18 +336,15 @@ while run:
 	#draw bullet
 	bullet_group.draw(screen)
 
-	#draw bullet
-	bullet_group.draw(screen)
-
 	#draw and scroll the ground
 	screen.blit(ground_img, (ground_scroll, 768))
 
-	#check boss
+	#self.position_go boss
 	if score >= score_meet_boss:
 		score_meet_boss += 50
-		boss = True
+		boss_check = True
 
-	#check the score
+	#self.position_go the score
 	if len(pipe_group) > 0:
 		if bird_group.sprites()[0].rect.left > pipe_group.sprites()[0].rect.left\
 			and bird_group.sprites()[0].rect.right < pipe_group.sprites()[0].rect.right\
@@ -327,8 +360,8 @@ while run:
 	if immortal > 0:
 		immortal -= 1
 	elif pygame.sprite.groupcollide(bird_group, pipe_group, False, False):
-			flappy.heart -= 1
-			immortal = 35 
+		flappy.heart -= 1
+		immortal = 35 
 	if flappy.rect.top < 0:
 		flappy.heart = 0
 	#once the bird has hit the ground it's game over and no longer flying
@@ -345,11 +378,10 @@ while run:
 			flappy.bullet_frequency = start_bullet_frequency
 			last_bullet = 0
 
-
 	if flying == True and game_over == False:
 		time_now = pygame.time.get_ticks()
 		#generate new pipes
-		if time_now - last_pipe > pipe_frequency and boss == False:
+		if time_now - last_pipe > pipe_frequency and boss_check == False:
 			random_drop = random.randint(1, 100)
 			pipe_height = random.randint(-100, 100)
 			btm_pipe = Pipe(screen_width, int(screen_height / 2) + pipe_height, -1)
@@ -361,8 +393,8 @@ while run:
 				item_box = Itembox("Heart", btm_pipe.rect.x + 40, btm_pipe.rect.y - 80)
 				item_group.add(item_box)
 			last_pipe = time_now
-		#generate bullet
-		elif boss and score == score_meet_boss - 48:
+		#generate bullet and items
+		elif boss_check and score == score_meet_boss - 48:
 			if time_now - last_pipe > flappy.bullet_frequency:
 				shoot = Bullet(bird_group.sprites()[0].rect.centerx, \
 				bird_group.sprites()[0].rect.centery)
@@ -374,7 +406,10 @@ while run:
 				item_box = Itembox(item_type, screen_width, int(screen_height / 2) + item_height)
 				item_group.add(item_box)
 				last_item = time_now
+		elif boss_check and score == score_meet_boss - 50:
+			boss_group.add(boss)
 
+		boss_group.update()
 		item_group.update()
 		bullet_group.update()
 		pipe_group.update()
@@ -388,8 +423,7 @@ while run:
 	with open('HighScore.txt', 'w') as f:
 		f.write(str(highestscore))
 
-	draw_text('HighScore: ' + str(highestscore), font, white, 12, 20)
-
+	draw_text('HighScore: ' + str(highestscore), font_highscore, white, 12, 20)
 	# check for game over and reset
 	# check heart
 	if flappy.heart == 0:
@@ -399,8 +433,15 @@ while run:
 			game_over = False
 			score = reset_game()
 			immortal = 0
-			boss = False
+			boss_check = False
 			score_meet_boss = star_score_meet_boss
+	# check boss
+	if boss.heart <= 0:
+		boss_group.empty()
+		boss.rect.x = start_postion_x
+		boss.heart = start_heart_boss
+		boss_check = False
+		score += 25
 
 	for event in pygame.event.get():
 		if event.type == pygame.QUIT:
