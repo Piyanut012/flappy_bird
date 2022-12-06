@@ -85,6 +85,14 @@ def reset_game():
 	score = 0
 	return score
 
+def get_highest_score():
+	with open('HighScore.txt', 'r') as f:
+		return f.read()
+
+try:
+	highestscore = int(get_highest_score())
+except:
+	highestscore = 0
 
 class Bird(pygame.sprite.Sprite):
 
@@ -103,7 +111,7 @@ class Bird(pygame.sprite.Sprite):
 		self.rect.center = [x, y]
 		self.vel = 0
 		self.clicked = False
-
+	
 	def update(self):
 
 		if flying == True:
@@ -287,7 +295,10 @@ while run:
 
 	#draw heart
 	for x in range(flappy.heart):
-		screen.blit(heart_img, (10 + (x * 30), 10))
+		screen.blit(heart_img, (10 + (x * 30), 60))
+
+	#draw bullet
+	bullet_group.draw(screen)
 
 	#draw bullet
 	bullet_group.draw(screen)
@@ -371,6 +382,13 @@ while run:
 		ground_scroll -= scroll_speed
 		if abs(ground_scroll) > 35:
 			ground_scroll = 0
+
+	if highestscore <= score:
+		highestscore = score
+	with open('HighScore.txt', 'w') as f:
+		f.write(str(highestscore))
+
+	draw_text('HighScore: ' + str(highestscore), font, white, 12, 20)
 
 	# check for game over and reset
 	# check heart
