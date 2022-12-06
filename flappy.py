@@ -226,16 +226,10 @@ class SpriteSheet_draw():
         image = pygame.transform.scale(image, (width*scale, height*scale))
         image.set_colorkey(colour)
         return image
-
 sprite_sheet = SpriteSheet_draw(witch_sprites)
 #create animation list
 ani_frames = 5
 ani_list = [sprite_sheet.get_image(x, 48, 48, 3, BLACK) for x in range(ani_frames)]
-
-last_update = pygame.time.get_ticks()
-ani_cd = 150
-frame = 0
-witch_enter = 900
 
 class SpriteSheet(pygame.sprite.Sprite):
 	
