@@ -24,9 +24,9 @@ font_highscore = pygame.font.SysFont('Bauhaus 93', 40)
 #define colours
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
-YELLOW = (200, 200, 0)
-RED = (200, 0, 0)
-GREY = (200, 200, 200)
+YELLOW = (220, 220, 0)
+RED = (220, 0, 0)
+GREY = (220, 220, 220)
 
 #define game variables
 ground_scroll = 0
@@ -278,6 +278,7 @@ class SpriteSheet(pygame.sprite.Sprite):
 		pygame.draw.rect(screen, YELLOW, (self.rect.x, self.rect.y-24, 144*health_ratio, 10))
 
 
+
 class Itembox(pygame.sprite.Sprite):
 	def __init__(self, item_type, x, y):
 		pygame.sprite.Sprite.__init__(self)
@@ -400,8 +401,7 @@ while run:
 		#generate bullet and items
 		elif boss_check and score == score_meet_boss - 48:
 			if time_now - last_pipe > flappy.bullet_frequency:
-				shoot = Bullet(bird_group.sprites()[0].rect.centerx, \
-				bird_group.sprites()[0].rect.centery)
+				shoot = Bullet(bird_group.sprites()[0].rect.centerx, bird_group.sprites()[0].rect.centery)
 				bullet_group.add(shoot)
 				last_pipe = time_now
 			if time_now - last_item > item_frequency_boss:
