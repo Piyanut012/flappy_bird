@@ -52,6 +52,7 @@ collect_item = False
 rate_drop = 5 # %
 heart_boss = 75
 start_heart_boss = heart
+boss_kill = True
 
 
 #load images
@@ -149,6 +150,7 @@ class Pipe(pygame.sprite.Sprite):
 		pygame.sprite.Sprite.__init__(self)
 		self.image = pygame.image.load("img/stonepipetest.png")
 		self.rect = self.image.get_rect()
+		self.vel = 50
 		#position variable determines if the pipe is coming from the bottom or top
 		#position 1 is from the top, -1 is from the bottom
 		if position == 1:
@@ -156,14 +158,20 @@ class Pipe(pygame.sprite.Sprite):
 			self.rect.bottomleft = [x, y - int(pipe_gap / 2)]
 		elif position == -1:
 			self.rect.topleft = [x, y + int(pipe_gap / 2)]
-
+		
 
 	def update(self):
 		self.rect.x -= scroll_speed
 		if self.rect.right < 0:
 			self.kill()
-
-
+	
+		if boss_kill == True:
+			up_down = random.randint(0, 1)
+			time = pygame.time.get_ticks()
+			if self.rect.top <= self.rect.y + 10 and up_down == 0:
+				self.rect.y += 1
+			elif self.rect.top >= self.rect.y - 10 and up_down == 1:
+				self.rect.y -= 1
 
 class Button():
 	def __init__(self, x, y, image):
@@ -201,7 +209,7 @@ class Bullet(pygame.sprite.Sprite):
 
 #create sprite class and get image sprites
 class SpriteSheet():
-    def __init__(self, x, y, image, heart):
+    def __init__(self, image):
         self.sheet = image
 
     def get_image(self, frame, width, height, scale, colour):
@@ -211,7 +219,7 @@ class SpriteSheet():
         image.set_colorkey(colour)
         return image
 
-sprite_sheet = SpriteSheet(witch_sprites, heart_boss)
+sprite_sheet = SpriteSheet(witch_sprites)
 #create animation list
 ani_frames = 5
 ani_list = [sprite_sheet.get_image(x, 48, 48, 3, BLACK) for x in range(ani_frames)]
