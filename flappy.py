@@ -295,7 +295,7 @@ while run:
 
 	#draw heart
 	for x in range(flappy.heart):
-		screen.blit(heart_img, (10 + (x * 30), 60))
+		screen.blit(heart_img, (10 + (x * 30), 80))
 
 	#draw bullet
 	bullet_group.draw(screen)
