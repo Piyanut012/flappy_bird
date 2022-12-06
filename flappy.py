@@ -50,6 +50,8 @@ heart = 3
 start_heart = heart
 collect_item = False
 rate_drop = 5 # %
+heart_boss = 75
+start_heart_boss = heart
 
 
 #load images
@@ -199,16 +201,17 @@ class Bullet(pygame.sprite.Sprite):
 
 #create sprite class and get image sprites
 class SpriteSheet():
-    def __init__(self, image):
+    def __init__(self, x, y, image, heart):
         self.sheet = image
-    
+
     def get_image(self, frame, width, height, scale, colour):
         image = pygame.Surface((width, height)).convert_alpha()
         image.blit(self.sheet, (0, 0), (0, (frame*height), width, height))
         image = pygame.transform.scale(image, (width*scale, height*scale))
         image.set_colorkey(colour)
         return image
-sprite_sheet = SpriteSheet(witch_sprites)
+
+sprite_sheet = SpriteSheet(witch_sprites, heart_boss)
 #create animation list
 ani_frames = 5
 ani_list = [sprite_sheet.get_image(x, 48, 48, 3, BLACK) for x in range(ani_frames)]
