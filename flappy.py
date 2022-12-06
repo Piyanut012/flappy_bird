@@ -22,7 +22,11 @@ pygame.display.set_caption('Flappy Bird Beyond')
 font = pygame.font.SysFont('Bauhaus 93', 60)
 font_highscore = pygame.font.SysFont('Bauhaus 93', 40)
 #define colours
-white = (255, 255, 255)
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+YELLOW = (200, 200, 0)
+RED = (200, 0, 0)
+GREY = (200, 200, 200)
 
 #define game variables
 ground_scroll = 0
@@ -58,8 +62,8 @@ rate_drop = 10 # %
 boss_check = False
 score_meet_boss = 3
 star_score_meet_boss = score_meet_boss
-stack_score_boss = 50
-score_kill_boss = 25
+stack_score_boss = 30
+score_kill_boss = int(stack_score_boss/2)
 heart_boss = 20
 start_heart_boss = heart_boss
 start_postion_x = 1000
@@ -100,10 +104,17 @@ def reset_game():
 	score = 0
 	return score
 
+def kill_boss():
+	boss_group.empty()
+	bullet_group.empty()
+	item_group.empty()
+	boss.heart = start_heart_boss
+	boss.rect.x = start_postion_x
+	return score_kill_boss
+
 def get_highest_score():
 	with open('HighScore.txt', 'r') as f:
 		return f.read()
-
 try:
 	highestscore = int(get_highest_score())
 except:
@@ -118,9 +129,7 @@ class Bird(pygame.sprite.Sprite):
 		self.counter = 0
 		self.heart = heart
 		self.bullet_frequency = bullet_frequency
-		for num in range (1, 4):
-			img = pygame.image.load(f"img/bird{num}.png")
-			self.images.append(img)
+		self.images = [pygame.image.load(f"img/bird{num}.png") for num in range (1, 4)]
 		self.image = self.images[self.index]
 		self.rect = self.image.get_rect()
 		self.rect.center = [x, y]
@@ -235,17 +244,14 @@ class SpriteSheet_draw():
         image.set_colorkey(colour)
         return image
 sprite_sheet = SpriteSheet_draw(witch_sprites)
-#create animation list
-ani_frames = 5
-ani_list = [sprite_sheet.get_image(x, 48, 48, 3, BLACK) for x in range(ani_frames)]
 
 class SpriteSheet(pygame.sprite.Sprite):
 	
-	def __init__(self, images, x, y, heart, position_go):
+	def __init__(self, x, y, heart, position_go):
 		pygame.sprite.Sprite.__init__(self)
 		self.index = 0
 		self.counter = 0
-		self.images = images
+		self.images = [sprite_sheet.get_image(x, 48, 48, 3, BLACK) for x in range(5)]
 		self.heart = heart
 		self.image = self.images[self.index]
 		self.rect = self.image.get_rect()
@@ -254,9 +260,9 @@ class SpriteSheet(pygame.sprite.Sprite):
 
 	def update(self):
 
+		#animation
 		self.counter += 1
 		cooldown = 5
-
 		if self.counter > cooldown:
 			self.counter = 0
 			self.index += 1
@@ -264,6 +270,7 @@ class SpriteSheet(pygame.sprite.Sprite):
 					self.index = 0 
 		self.image = self.images[self.index]
 
+		#movement
 		if self.rect.x > 700:
 			self.rect.x -= 2
 		else:
@@ -275,6 +282,12 @@ class SpriteSheet(pygame.sprite.Sprite):
 				self.rect.y -= 2
 			else:
 				self.position_go = random.randrange(50, 550, 2)
+
+		#health bar
+		health_ratio = boss.heart/heart_boss
+		pygame.draw.rect(screen, GREY, (self.rect.x-3, self.rect.y-24-3, 144+6, 10+6))
+		pygame.draw.rect(screen, RED, (self.rect.x, self.rect.y-24, 144, 10))
+		pygame.draw.rect(screen, YELLOW, (self.rect.x, self.rect.y-24, 144*health_ratio, 10))
 
 class Itembox(pygame.sprite.Sprite):
 	def __init__(self, item_type, x, y):
@@ -288,6 +301,7 @@ class Itembox(pygame.sprite.Sprite):
 		self.rect.x -= scroll_speed
 		if self.rect.right < 0:
 			self.kill()
+		#collect items
 		elif pygame.sprite.collide_rect(self, flappy):
 			if self.item_type == "Heart" and flappy.heart < start_heart:
 				flappy.heart += 1
@@ -306,7 +320,7 @@ boss_group = pygame.sprite.Group()
 flappy = Bird(100, int(screen_height / 2), heart, bullet_frequency)
 bird_group.add(flappy)
 
-boss = SpriteSheet(ani_list, start_postion_x, 450, heart_boss, 0)
+boss = SpriteSheet(start_postion_x, 450, heart_boss, 0)
 
 #create restart button instance
 button = Button(screen_width // 2 - 50, screen_height // 2 - 100, button_img)
@@ -351,7 +365,7 @@ while run:
 			if bird_group.sprites()[0].rect.left > pipe_group.sprites()[0].rect.right:
 				score += 1
 				pass_pipe = False
-	draw_text(str(score), font, white, int(screen_width / 2), 20)
+	draw_text(str(score), font, WHITE, int(screen_width / 2), 20)
 
 	#look for collision and cooldown for immortal  
 	if immortal > 0:
@@ -407,6 +421,7 @@ while run:
 		elif boss_check and score == score_meet_boss - stack_score_boss:
 			boss_group.add(boss)
 
+
 		boss_group.update()
 		item_group.update()
 		bullet_group.update()
@@ -421,7 +436,7 @@ while run:
 		highestscore = score
 	with open('HighScore.txt', 'w') as f:
 		f.write(str(highestscore))
-	draw_text('HighScore: ' + str(highestscore), font_highscore, white, 12, 20)
+	draw_text('HighScore: ' + str(highestscore), font_highscore, WHITE, 12, 20)
 
 	# check for game over and reset
 	if flappy.heart == 0:
@@ -433,14 +448,11 @@ while run:
 			immortal = 0
 			boss_check = False
 			score_meet_boss = star_score_meet_boss
-
-	# check boss
+	print(boss.heart)
+	# kill boss
 	if boss.heart <= 0:
-		boss_group.empty()
-		boss.rect.x = start_postion_x
-		boss.heart = start_heart_boss
 		boss_check = False
-		score += 25
+		score += kill_boss()
 
 	for event in pygame.event.get():
 		if event.type == pygame.QUIT:
