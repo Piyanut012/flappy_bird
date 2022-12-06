@@ -300,6 +300,9 @@ while run:
 	#draw bullet
 	bullet_group.draw(screen)
 
+	#draw bullet
+	bullet_group.draw(screen)
+
 	#draw and scroll the ground
 	screen.blit(ground_img, (ground_scroll, 768))
 
@@ -307,6 +310,7 @@ while run:
 	if score >= score_meet_boss:
 		score_meet_boss += 50
 		boss = True
+
 	#check the score
 	if len(pipe_group) > 0:
 		if bird_group.sprites()[0].rect.left > pipe_group.sprites()[0].rect.left\
@@ -318,6 +322,7 @@ while run:
 				score += 1
 				pass_pipe = False
 	draw_text(str(score), font, white, int(screen_width / 2), 20)
+
 	#look for collision and cooldown for immortal  
 	if immortal > 0:
 		immortal -= 1
@@ -377,7 +382,6 @@ while run:
 		ground_scroll -= scroll_speed
 		if abs(ground_scroll) > 35:
 			ground_scroll = 0
-
 
 	if highestscore <= score:
 		highestscore = score
