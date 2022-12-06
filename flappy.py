@@ -51,7 +51,7 @@ start_heart = heart
 heart_boss = 50
 start_heart_boss = heart_boss
 collect_item = False
-rate_drop = 100 # %
+rate_drop = 10 # %
 start_postion_x = 1000
 
 
