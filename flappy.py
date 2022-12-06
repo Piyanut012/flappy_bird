@@ -16,7 +16,7 @@ screen_width = 864
 screen_height = 936
 
 screen = pygame.display.set_mode((screen_width, screen_height))
-pygame.display.set_caption('Flappy Bird')
+pygame.display.set_caption('Flappy Bird Beyond')
 
 #define font
 font = pygame.font.SysFont('Bauhaus 93', 60)
@@ -29,32 +29,40 @@ ground_scroll = 0
 scroll_speed = 4
 flying = False
 game_over = False
-pipe_gap = 160
-immortal = 0
-#milliseconds
-pipe_frequency = 1500
-bullet_frequency = 200
-item_frequency_boss = 15000
-start_bullet_frequency = bullet_frequency
-cooldown_bullet_item = 8000
-last_pipe = pygame.time.get_ticks() - pipe_frequency
-last_item = pygame.time.get_ticks() - pipe_frequency
-last_bullet = 0
 score = 0
+
+#pipe
+pipe_gap = 160
+pipe_frequency = 1500
+last_pipe = pygame.time.get_ticks() - pipe_frequency
 pass_pipe = False
+
+#bird
+heart = 3
+start_heart = heart
+immortal = 0
+
+#bullet
+bullet_frequency = 200
+start_bullet_frequency = bullet_frequency
+last_bullet = 0
+
+#items
+last_item = pygame.time.get_ticks() - pipe_frequency
+cooldown_ligthning_boss = 8000
+item_frequency_boss = 15000
+collect_item = False
+rate_drop = 10 # %
+
+#boss
 boss_check = False
 score_meet_boss = 3
 star_score_meet_boss = score_meet_boss
-immortal = 0
-heart = 3
-start_heart = heart
-heart_boss = 50
+stack_score_boss = 50
+score_kill_boss = 25
+heart_boss = 20
 start_heart_boss = heart_boss
-collect_item = False
-rate_drop = 10 # %
 start_postion_x = 1000
-
-
 
 #load images
 bg = pygame.image.load('img/bg.png')
@@ -285,7 +293,7 @@ class Itembox(pygame.sprite.Sprite):
 				flappy.heart += 1
 				self.kill()
 			elif self.item_type == "Lightning":
-				flappy.bullet_frequency = flappy.bullet_frequency//4
+				flappy.bullet_frequency = flappy.bullet_frequency//2
 				self.kill()
 
 #group
@@ -300,10 +308,8 @@ bird_group.add(flappy)
 
 boss = SpriteSheet(ani_list, start_postion_x, 450, heart_boss, 0)
 
-
 #create restart button instance
 button = Button(screen_width // 2 - 50, screen_height // 2 - 100, button_img)
-
 
 run = True
 while run:
@@ -313,32 +319,29 @@ while run:
 	#draw background
 	screen.blit(bg, (0,0))
 
+	#draw
 	item_group.draw(screen)
 	pipe_group.draw(screen)
 	boss_group.draw(screen)
-	# for immortal
+	bullet_group.draw(screen)
+	for x in range(flappy.heart):
+		screen.blit(heart_img, (10 + (x * 30), 70))
+	#for immortal
 	if immortal%2 == 0 or game_over == True:
 		bird_group.draw(screen)
 
-	#update
+	#update bird
 	bird_group.update()
-
-	#draw heart
-	for x in range(flappy.heart):
-		screen.blit(heart_img, (10 + (x * 30), 80))
-
-	#draw bullet
-	bullet_group.draw(screen)
 
 	#draw and scroll the ground
 	screen.blit(ground_img, (ground_scroll, 768))
 
-	#self.position_go boss
+	#check score meet boss
 	if score >= score_meet_boss:
-		score_meet_boss += 50
+		score_meet_boss += stack_score_boss
 		boss_check = True
 
-	#self.position_go the score
+	#check the score
 	if len(pipe_group) > 0:
 		if bird_group.sprites()[0].rect.left > pipe_group.sprites()[0].rect.left\
 			and bird_group.sprites()[0].rect.right < pipe_group.sprites()[0].rect.right\
@@ -368,7 +371,7 @@ while run:
 		time_now = pygame.time.get_ticks()
 		if last_bullet == 0:
 			last_bullet = time_now
-		if time_now - last_bullet > cooldown_bullet_item:
+		if time_now - last_bullet > cooldown_ligthning_boss:
 			flappy.bullet_frequency = start_bullet_frequency
 			last_bullet = 0
 
@@ -388,7 +391,7 @@ while run:
 				item_group.add(item_box)
 			last_pipe = time_now
 		#generate bullet and items
-		elif boss_check and score == score_meet_boss - 48:
+		elif boss_check and score == score_meet_boss - (stack_score_boss - 2):
 			if time_now - last_pipe > flappy.bullet_frequency:
 				shoot = Bullet(bird_group.sprites()[0].rect.centerx, \
 				bird_group.sprites()[0].rect.centery)
@@ -400,7 +403,8 @@ while run:
 				item_box = Itembox(item_type, screen_width, int(screen_height / 2) + item_height)
 				item_group.add(item_box)
 				last_item = time_now
-		elif boss_check and score == score_meet_boss - 50:
+		#generate boss
+		elif boss_check and score == score_meet_boss - stack_score_boss:
 			boss_group.add(boss)
 
 		boss_group.update()
@@ -412,14 +416,14 @@ while run:
 		if abs(ground_scroll) > 35:
 			ground_scroll = 0
 
+	# check highscore and update
 	if highestscore <= score:
 		highestscore = score
 	with open('HighScore.txt', 'w') as f:
 		f.write(str(highestscore))
-
 	draw_text('HighScore: ' + str(highestscore), font_highscore, white, 12, 20)
+
 	# check for game over and reset
-	# check heart
 	if flappy.heart == 0:
 		game_over = True
 	if game_over == True:
@@ -429,6 +433,7 @@ while run:
 			immortal = 0
 			boss_check = False
 			score_meet_boss = star_score_meet_boss
+
 	# check boss
 	if boss.heart <= 0:
 		boss_group.empty()
