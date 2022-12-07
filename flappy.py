@@ -368,10 +368,10 @@ while run:
 		flappy.heart -= 1
 		immortal = 35 
 	if flappy.rect.top < 0:
-		flappy.heart = 0
+		flappy.heart = -1
 	#once the bird has hit the ground it's game over and no longer flying
 	if flappy.rect.bottom >= 768:
-		flappy.heart = 0
+		flappy.heart = -1
 		flying = False
 
 	# cooldown for items
@@ -430,7 +430,7 @@ while run:
 	draw_text('HighScore: ' + str(highestscore), font_highscore, WHITE, 12, 20)
 	# check for game over and reset
 	# check heart
-	if flappy.heart == 0:
+	if flappy.heart == -1:
 		game_over = True
 	if game_over == True:
 		if button.draw():
