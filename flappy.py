@@ -34,6 +34,7 @@ scroll_speed = 4
 flying = False
 game_over = False
 score = 0
+round = 1
 
 #pipe
 pipe_gap = 160
@@ -45,6 +46,7 @@ pass_pipe = False
 heart = 3
 start_heart = heart
 immortal = 0
+damage = 1
 
 #bullet
 bullet_frequency = 200
@@ -53,7 +55,7 @@ last_bullet = 0
 
 #items
 last_item = pygame.time.get_ticks() - pipe_frequency
-cooldown_ligthning_boss = 8000
+cooldown_item_boss = 8000
 item_frequency_boss = 15000
 collect_item = False
 rate_drop = 10 # %
@@ -68,6 +70,11 @@ heart_boss = 20
 start_heart_boss = heart_boss
 start_postion_x = 1000
 
+#crow
+last_crow = pygame.time.get_ticks() - 500
+crow_frequency = 1500
+crow_heart = 2
+
 #load images
 bg = pygame.image.load('img/bg.png')
 ground_img = pygame.image.load('img/ground.png')
@@ -75,16 +82,14 @@ button_img = pygame.image.load('img/restart.png')
 witch_sprites = pygame.image.load('Boss/Blue_witch/B_witch_charge.png').convert_alpha()
 
 heart_img = pygame.image.load('img/heart.png')
-lightning_img = pygame.image.load('img/lightning.png')
-lightning_img = pygame.transform.scale(lightning_img, (25, 50))
+lightning_img = pygame.transform.scale(pygame.image.load('img/lightning.png'), (25, 50))
+x2_img = pygame.transform.scale(pygame.image.load('img/x2.png'), (50, 50))
 #pick up boxes
 item_boxes = {
 	'Heart'		: heart_img,
-	'Lightning' : lightning_img
+	'Lightning' : lightning_img,
+	'X2'		: x2_img
 }
-
-#set colours
-BLACK = (0, 0, 0)
 
 #function for outputting text onto the screen
 def draw_text(text, font, text_col, x, y):
@@ -96,6 +101,7 @@ def reset_game():
 	bullet_group.empty()
 	item_group.empty()
 	boss_group.empty()
+	crow_group.empty()
 	flappy.rect.x = 100
 	flappy.rect.y = int(screen_height / 2)
 	flappy.heart = start_heart
@@ -104,13 +110,24 @@ def reset_game():
 	score = 0
 	return score
 
-def kill_boss():
+def kill_boss(roundz):
 	boss_group.empty()
 	bullet_group.empty()
 	item_group.empty()
-	boss.heart = start_heart_boss
+	boss.heart = start_heart_boss * roundz
 	boss.rect.x = start_postion_x
 	return score_kill_boss
+
+def cooldown_item(time_now, type, start, last_bullet):
+	if last_bullet == 0:
+		last_bullet = time_now
+	if time_now - last_bullet > cooldown_item_boss:
+		if type == "bullet":
+			flappy.bullet_frequency = start
+		elif type == "damage":
+			flappy.damage = start
+		last_bullet = 0
+	return last_bullet
 
 def get_highest_score():
 	with open('HighScore.txt', 'r') as f:
@@ -122,20 +139,21 @@ except:
 
 class Bird(pygame.sprite.Sprite):
 
-	def __init__(self, x, y, heart, bullet_frequency):
+	def __init__(self, x, y, heart, bullet_frequency, damage):
 		pygame.sprite.Sprite.__init__(self)
 		self.images = []
 		self.index = 0
 		self.counter = 0
 		self.heart = heart
 		self.bullet_frequency = bullet_frequency
+		self.damage = damage
 		self.images = [pygame.image.load(f"img/bird{num}.png") for num in range (1, 4)]
 		self.image = self.images[self.index]
 		self.rect = self.image.get_rect()
 		self.rect.center = [x, y]
 		self.vel = 0
 		self.clicked = False
-	
+
 	def update(self):
 
 		if flying == True:
@@ -223,13 +241,18 @@ class Bullet(pygame.sprite.Sprite):
 		self.image = pygame.image.load('img/rock.png')
 		self.rect = self.image.get_rect()
 		self.rect.center = [x, y]
-	
+
 	def update(self):
+		print(flappy.damage)
 		self.rect.x += 10
 		if self.rect.left < 0:
 			self.kill()
+		# damage
 		elif pygame.sprite.collide_rect(self, boss):
-			boss.heart -= 1
+			boss.heart -= flappy.damage
+			self.kill()
+		elif pygame.sprite.collide_rect(self, crow):
+			crow.heart -= flappy.damage
 			self.kill()
 
 #create sprite class and get image sprites
@@ -258,7 +281,7 @@ class SpriteSheet(pygame.sprite.Sprite):
 		self.rect.center = [x, y]
 		self.position_go = position_go
 
-	def update(self):
+	def update(self, round):
 
 		#animation
 		self.counter += 1
@@ -284,10 +307,43 @@ class SpriteSheet(pygame.sprite.Sprite):
 				self.position_go = random.randrange(50, 550, 2)
 
 		#health bar
-		health_ratio = boss.heart/heart_boss
+		health_ratio = boss.heart/(heart_boss*round)
 		pygame.draw.rect(screen, GREY, (self.rect.x-3, self.rect.y-24-3, 144+6, 10+6))
 		pygame.draw.rect(screen, RED, (self.rect.x, self.rect.y-24, 144, 10))
 		pygame.draw.rect(screen, YELLOW, (self.rect.x, self.rect.y-24, 144*health_ratio, 10))
+
+class Minion(pygame.sprite.Sprite):
+	
+	def __init__(self, x, y, heart):
+		pygame.sprite.Sprite.__init__(self)
+		self.index = 0
+		self.counter = 0
+		self.heart = heart
+		self.images = [pygame.transform.scale(pygame.image.load(f"img/crow{num}.png"), (60, 75)) for num in range (1, 7)]
+		self.images = [pygame.transform.rotate(image, 125) for image in self.images]
+		self.image = self.images[self.index]
+		self.rect = self.image.get_rect()
+		self.rect.center = [x, y]
+
+	def update(self):
+
+		self.rect.x -= scroll_speed + 3
+		if self.rect.right < 0:
+			self.kill()
+		
+		#animation
+		self.counter += 1
+		cooldown = 4
+		if self.counter > cooldown:
+			self.counter = 0
+			self.index += 1
+			if self.index >= len(self.images):
+					self.index = 0 
+		self.image = self.images[self.index]
+
+		#kill crow
+		if self.heart == 0:
+			self.kill()
 
 class Itembox(pygame.sprite.Sprite):
 	def __init__(self, item_type, x, y):
@@ -309,6 +365,9 @@ class Itembox(pygame.sprite.Sprite):
 			elif self.item_type == "Lightning":
 				flappy.bullet_frequency = flappy.bullet_frequency//2
 				self.kill()
+			elif self.item_type == "X2":
+				flappy.damage = flappy.damage*2
+				self.kill()
 
 #group
 pipe_group = pygame.sprite.Group()
@@ -316,11 +375,13 @@ bird_group = pygame.sprite.Group()
 bullet_group = pygame.sprite.Group()
 item_group = pygame.sprite.Group()
 boss_group = pygame.sprite.Group()
+crow_group = pygame.sprite.Group()
 
-flappy = Bird(100, int(screen_height / 2), heart, bullet_frequency)
+flappy = Bird(100, int(screen_height / 2), heart, bullet_frequency, damage)
 bird_group.add(flappy)
 
 boss = SpriteSheet(start_postion_x, 450, heart_boss, 0)
+
 
 #create restart button instance
 button = Button(screen_width // 2 - 50, screen_height // 2 - 100, button_img)
@@ -338,6 +399,7 @@ while run:
 	pipe_group.draw(screen)
 	boss_group.draw(screen)
 	bullet_group.draw(screen)
+	crow_group.draw(screen)
 	for x in range(flappy.heart):
 		screen.blit(heart_img, (10 + (x * 30), 70))
 	#for immortal
@@ -370,7 +432,7 @@ while run:
 	#look for collision and cooldown for immortal  
 	if immortal > 0:
 		immortal -= 1
-	elif pygame.sprite.groupcollide(bird_group, pipe_group, False, False):
+	elif pygame.sprite.groupcollide(bird_group, pipe_group, False, False) or pygame.sprite.groupcollide(bird_group, crow_group, False, False):
 		flappy.heart -= 1
 		immortal = 35 
 	if flappy.rect.top < 0:
@@ -379,15 +441,6 @@ while run:
 	if flappy.rect.bottom >= 768:
 		flappy.heart = 0
 		flying = False
-
-	# cooldown for itme
-	if flappy.bullet_frequency < start_bullet_frequency:
-		time_now = pygame.time.get_ticks()
-		if last_bullet == 0:
-			last_bullet = time_now
-		if time_now - last_bullet > cooldown_ligthning_boss:
-			flappy.bullet_frequency = start_bullet_frequency
-			last_bullet = 0
 
 	if flying == True and game_over == False:
 		time_now = pygame.time.get_ticks()
@@ -404,25 +457,38 @@ while run:
 				item_box = Itembox("Heart", btm_pipe.rect.x + 40, btm_pipe.rect.y - 80)
 				item_group.add(item_box)
 			last_pipe = time_now
-		#generate bullet and items
 		elif boss_check and score == score_meet_boss - (stack_score_boss - 2):
+			#generate bullet
 			if time_now - last_pipe > flappy.bullet_frequency:
 				shoot = Bullet(bird_group.sprites()[0].rect.centerx, \
 				bird_group.sprites()[0].rect.centery)
 				bullet_group.add(shoot)
 				last_pipe = time_now
+			#generate items
 			if time_now - last_item > item_frequency_boss:
 				item_height = random.randint(-300, 100)
 				item_type = random.choice(list(item_boxes.keys()))
 				item_box = Itembox(item_type, screen_width, int(screen_height / 2) + item_height)
 				item_group.add(item_box)
 				last_item = time_now
+			# cooldown for itme
+			if flappy.bullet_frequency < start_bullet_frequency:
+				last_bullet = cooldown_item(pygame.time.get_ticks(), "bullet", start_bullet_frequency,last_bullet)
+			if flappy.damage > damage:
+				last_bullet = cooldown_item(pygame.time.get_ticks(), "damage", damage, last_bullet)
+			#generate crow
+			if time_now - last_crow > crow_frequency:
+				crow_height = random.randint(100, 700)
+				crow = Minion(900, crow_height, crow_heart)
+				crow_group.add(crow)
+				crow_frequency = random.randrange(1000, 2501, 1000)
+				last_crow = time_now
 		#generate boss
 		elif boss_check and score == score_meet_boss - stack_score_boss:
 			boss_group.add(boss)
 
-
-		boss_group.update()
+		crow_group.update()
+		boss_group.update(round)
 		item_group.update()
 		bullet_group.update()
 		pipe_group.update()
@@ -445,14 +511,16 @@ while run:
 		if button.draw():
 			game_over = False
 			score = reset_game()
+			round = 1
 			immortal = 0
 			boss_check = False
 			score_meet_boss = star_score_meet_boss
-	print(boss.heart)
+
 	# kill boss
 	if boss.heart <= 0:
 		boss_check = False
-		score += kill_boss()
+		round += 1
+		score += kill_boss(round)
 
 	for event in pygame.event.get():
 		if event.type == pygame.QUIT:
