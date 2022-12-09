@@ -24,9 +24,9 @@ font_highscore = pygame.font.SysFont('Bauhaus 93', 40)
 #define colours
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
-YELLOW = (200, 200, 0)
-RED = (200, 0, 0)
-GREY = (200, 200, 200)
+YELLOW = (230, 230, 0)
+RED = (230, 0, 0)
+GREY = (230, 230, 230)
 
 #define game variables
 ground_scroll = 0
