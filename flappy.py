@@ -55,8 +55,8 @@ start_heart = heart
 heart_boss = 50
 start_heart_boss = heart_boss
 collect_item = False
-rate_drop = 10 # %
-start_postion_x = 1000
+rate_drop = 5 # %
+start_postion_x = 1500
 
 
 
@@ -251,7 +251,7 @@ class SpriteSheet(pygame.sprite.Sprite):
 	def update(self):
 
 		self.counter += 1
-		cooldown = 5
+		cooldown = 6
 
 		if self.counter > cooldown:
 			self.counter = 0
@@ -261,7 +261,7 @@ class SpriteSheet(pygame.sprite.Sprite):
 		self.image = self.images[self.index]
 
 		if self.rect.x > 700:
-			self.rect.x -= 2
+			self.rect.x -= 4
 		else:
 			if self.position_go == 0:
 				self.position_go = random.randrange(50, 550, 2)
