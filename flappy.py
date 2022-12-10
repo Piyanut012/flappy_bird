@@ -243,7 +243,6 @@ class Bullet(pygame.sprite.Sprite):
 		self.rect.center = [x, y]
 
 	def update(self):
-		print(flappy.damage)
 		self.rect.x += 10
 		if self.rect.left < 0:
 			self.kill()
