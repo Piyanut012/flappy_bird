@@ -283,7 +283,7 @@ class Gameboss(pygame.sprite.Sprite):
 		pygame.sprite.Sprite.__init__(self)
 		self.index = 0
 		self.counter = 0
-		self.images = [witch_boss.get_image(x, 48, 48, 3, BLACK) for x in range(5)]
+		self.images = [witch_boss.get_image(x, 48, 48, 4, BLACK) for x in range(5)]
 		self.heart = heart
 		self.image = self.images[self.index]
 		self.rect = self.image.get_rect()
@@ -303,7 +303,7 @@ class Gameboss(pygame.sprite.Sprite):
 		self.image = self.images[self.index]
 
 		#movement
-		if self.rect.x > 700:
+		if self.rect.x > 650:
 			self.rect.x -= 2
 		else:
 			if self.position_go == 0:
@@ -349,7 +349,7 @@ class BlueFlame(pygame.sprite.Sprite):
 		self.image = self.images[self.index]
 		if self.scale <= 1:
 			self.image = pygame.transform.scale(self.image, (self.image.get_width()*self.scale, self.image.get_height()*self.scale))
-			self.scale += 0.025
+			self.scale += 0.01
 
 class Warning(pygame.sprite.Sprite):
 
@@ -383,8 +383,9 @@ class Minion(pygame.sprite.Sprite):
 		self.index = 0
 		self.counter = 0
 		self.heart = heart
-		self.images = [pygame.transform.scale(pygame.image.load(f"img/crows/crow{num}.png"), (60, 75)) for num in range (1, 7)]
-		self.images = [pygame.transform.rotate(image, 125) for image in self.images]
+		self.images = [pygame.transform.scale(pygame.image.load(f"img/crows/crow{num}.png"), (76, 94)) for num in range (1, 7)]
+		self.images = [pygame.transform.flip(image, 90, 0) for image in self.images]
+		self.images = [pygame.transform.rotate(image, 15) for image in self.images]
 		self.image = self.images[self.index]
 		self.rect = self.image.get_rect()
 		self.rect.center = [x, y]
