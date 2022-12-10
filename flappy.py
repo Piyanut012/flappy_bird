@@ -38,7 +38,7 @@ pass_pipe = False
 check = False
 
 #load images
-bg = pygame.image.load('img/nightbg.png')
+bg = pygame.image.load('img/nightbg1.png')
 ground_img = pygame.image.load('img/ground.png')
 button_img = pygame.image.load('img/restart.png')
 heart_img = pygame.image.load('img/heart.png')
