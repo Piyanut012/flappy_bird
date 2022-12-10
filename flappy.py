@@ -384,7 +384,7 @@ class Minion(pygame.sprite.Sprite):
 		self.counter = 0
 		self.heart = heart
 		self.images = [pygame.transform.scale(pygame.image.load(f"img/crows/crow{num}.png"), (76, 94)) for num in range (1, 7)]
-		self.images = [pygame.transform.flip(image, 90, 0) for image in self.images]
+		self.images = [pygame.transform.flip(image, True, False) for image in self.images]
 		self.images = [pygame.transform.rotate(image, 15) for image in self.images]
 		self.image = self.images[self.index]
 		self.rect = self.image.get_rect()
