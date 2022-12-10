@@ -39,7 +39,7 @@ check = False
 
 #load images
 bg = pygame.image.load('img/nightbg.png')
-ground_img = pygame.image.load('img/groundtest.png')
+ground_img = pygame.image.load('img/ground.png')
 button_img = pygame.image.load('img/restart.png')
 heart_img = pygame.image.load('img/heart.png')
 
@@ -117,7 +117,7 @@ class Pipe(pygame.sprite.Sprite):
 
 	def __init__(self, x, y, position):
 		pygame.sprite.Sprite.__init__(self)
-		self.image = pygame.image.load("img/stonepipetest1.png")
+		self.image = pygame.image.load("img/stonepipetest2.png")
 		self.rect = self.image.get_rect()
 		#position variable determines if the pipe is coming from the bottom or top
 		#position 1 is from the top, -1 is from the bottom
