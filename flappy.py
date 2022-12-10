@@ -21,12 +21,13 @@ pygame.display.set_caption('Flappy Bird Beyond')
 #define font
 font = pygame.font.SysFont('Bauhaus 93', 60)
 font_highscore = pygame.font.SysFont('Bauhaus 93', 40)
+
 #define colours
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
-YELLOW = (200, 200, 0)
-RED = (200, 0, 0)
-GREY = (200, 200, 200)
+YELLOW = (230, 230, 0)
+RED = (230, 0, 0)
+GREY = (230, 230, 230)
 
 #define game variables
 ground_scroll = 0
@@ -69,20 +70,30 @@ score_kill_boss = int(stack_score_boss/2)
 heart_boss = 20
 start_heart_boss = heart_boss
 start_postion_x = 1000
+check_generate = False
 
 #crow
 last_crow = pygame.time.get_ticks() - 500
 crow_frequency = 1500
 crow_heart = 2
 
+#fire
+last_flame = pygame.time.get_ticks() - 500
+flame_frequency = 6000
+start_flame_frequency = flame_frequency
+warning_check = False
+
+#cloud
+last_cloud = 0
+cloud_frequency = 0
+
 #load images
 bg = pygame.image.load('img/bg.png')
 ground_img = pygame.image.load('img/ground.png')
 button_img = pygame.image.load('img/restart.png')
-witch_sprites = pygame.image.load('Boss/Blue_witch/B_witch_charge.png').convert_alpha()
-
+witch_sprites = pygame.image.load('img/B_witch_charge.png').convert_alpha()
 heart_img = pygame.image.load('img/heart.png')
-lightning_img = pygame.transform.scale(pygame.image.load('img/lightning.png'), (25, 50))
+lightning_img = pygame.transform.scale(pygame.image.load('img/lightning.png'), (50, 75))
 x2_img = pygame.transform.scale(pygame.image.load('img/x2.png'), (50, 50))
 #pick up boxes
 item_boxes = {
@@ -102,6 +113,9 @@ def reset_game():
 	item_group.empty()
 	boss_group.empty()
 	crow_group.empty()
+	warning_group.empty()
+	flame_group.empty()
+	bloodmoon_group.empty()
 	flappy.rect.x = 100
 	flappy.rect.y = int(screen_height / 2)
 	flappy.heart = start_heart
@@ -114,6 +128,7 @@ def kill_boss(roundz):
 	boss_group.empty()
 	bullet_group.empty()
 	item_group.empty()
+	flappy.heart += 1
 	boss.heart = start_heart_boss * roundz
 	boss.rect.x = start_postion_x
 	return score_kill_boss
@@ -147,7 +162,7 @@ class Bird(pygame.sprite.Sprite):
 		self.heart = heart
 		self.bullet_frequency = bullet_frequency
 		self.damage = damage
-		self.images = [pygame.image.load(f"img/bird{num}.png") for num in range (1, 4)]
+		self.images = [pygame.image.load(f"img/flappy/bird{num}.png") for num in range (1, 4)]
 		self.image = self.images[self.index]
 		self.rect = self.image.get_rect()
 		self.rect.center = [x, y]
@@ -190,12 +205,11 @@ class Bird(pygame.sprite.Sprite):
 			#point the bird at the ground
 			self.image = pygame.transform.rotate(self.images[self.index], -90)
 
-
 class Pipe(pygame.sprite.Sprite):
 
 	def __init__(self, x, y, position_go):
 		pygame.sprite.Sprite.__init__(self)
-		self.image = pygame.image.load("img/stonepipetest2.png")
+		self.image = pygame.image.load("img/pipe.png")
 		self.rect = self.image.get_rect()
 		#position_go variable determines if the pipe is coming from the bottom or top
 		#position_go 1 is from the top, -1 is from the bottom
@@ -205,13 +219,10 @@ class Pipe(pygame.sprite.Sprite):
 		elif position_go == -1:
 			self.rect.topleft = [x, y + int(pipe_gap / 2)]
 
-
 	def update(self):
 		self.rect.x -= scroll_speed
 		if self.rect.right < 0:
 			self.kill()
-
-
 
 class Button():
 	def __init__(self, x, y, image):
@@ -238,7 +249,7 @@ class Button():
 class Bullet(pygame.sprite.Sprite):
 	def __init__(self, x, y):
 		pygame.sprite.Sprite.__init__(self)
-		self.image = pygame.image.load('img/rock.png')
+		self.image = pygame.image.load('img/rice.png')
 		self.rect = self.image.get_rect()
 		self.rect.center = [x, y]
 
@@ -255,7 +266,7 @@ class Bullet(pygame.sprite.Sprite):
 			self.kill()
 
 #create sprite class and get image sprites
-class SpriteSheet_draw():
+class SpriteSheet():
     def __init__(self, image):
         self.sheet = image
 
@@ -265,15 +276,16 @@ class SpriteSheet_draw():
         image = pygame.transform.scale(image, (width*scale, height*scale))
         image.set_colorkey(colour)
         return image
-sprite_sheet = SpriteSheet_draw(witch_sprites)
 
-class SpriteSheet(pygame.sprite.Sprite):
-	
+witch_boss = SpriteSheet(witch_sprites)
+
+class Gameboss(pygame.sprite.Sprite):
+
 	def __init__(self, x, y, heart, position_go):
 		pygame.sprite.Sprite.__init__(self)
 		self.index = 0
 		self.counter = 0
-		self.images = [sprite_sheet.get_image(x, 48, 48, 3, BLACK) for x in range(5)]
+		self.images = [witch_boss.get_image(x, 48, 48, 3.5, BLACK) for x in range(5)]
 		self.heart = heart
 		self.image = self.images[self.index]
 		self.rect = self.image.get_rect()
@@ -293,7 +305,7 @@ class SpriteSheet(pygame.sprite.Sprite):
 		self.image = self.images[self.index]
 
 		#movement
-		if self.rect.x > 700:
+		if self.rect.x > 690:
 			self.rect.x -= 2
 		else:
 			if self.position_go == 0:
@@ -311,14 +323,99 @@ class SpriteSheet(pygame.sprite.Sprite):
 		pygame.draw.rect(screen, RED, (self.rect.x, self.rect.y-24, 144, 10))
 		pygame.draw.rect(screen, YELLOW, (self.rect.x, self.rect.y-24, 144*health_ratio, 10))
 
-class Minion(pygame.sprite.Sprite):
+class BlueFlame(pygame.sprite.Sprite):
+
+	def __init__(self, x, y):
+		pygame.sprite.Sprite.__init__(self)
+		self.index = 0
+		self.counter = 0
+		self.scale = 0.5
+		self.images = [pygame.image.load(f"img/blue_flames/blue_flame{num}.png") for num in range (1, 6)]
+		self.image = self.images[self.index]
+		self.rect = self.image.get_rect()
+		self.rect.center = [x, y]
 	
+	def update(self):
+
+		self.rect.x -= scroll_speed + 3
+		if self.rect.right < 0:
+			self.kill()
+		#animation
+		self.counter += 1
+		cooldown = 3
+		if self.counter > cooldown:
+			self.counter = 0
+			self.index += 1
+			if self.index >= len(self.images):
+					self.index = 0 
+		self.image = self.images[self.index]
+		if self.scale <= 1:
+			self.image = pygame.transform.scale(self.image, (self.image.get_width()*self.scale, self.image.get_height()*self.scale))
+			self.scale += 0.025
+
+class Warning(pygame.sprite.Sprite):
+
+	def __init__(self, x, y):
+		pygame.sprite.Sprite.__init__(self)
+		self.index = 0
+		self.counter = 0
+		self.images = [pygame.transform.scale(pygame.image.load(f"img/warning/warn{num}.png"), (100, 105)) for num in range (1, 3)]
+		self.image = self.images[self.index]
+		self.rect = self.image.get_rect()
+		self.rect.center = [x, y]
+	
+	def update(self):
+
+		#animation
+		self.counter += 1
+		cooldown = 3
+		if self.counter > cooldown:
+			self.counter = 0
+			self.index += 1
+			if self.index >= len(self.images):
+					self.index = 0
+		self.image = self.images[self.index]
+		self.rect.x = boss.rect.x - 50
+		self.rect.y = boss.rect.y + 30
+
+class bloodmoon(pygame.sprite.Sprite):
+
+	def __init__(self, x, y):
+		pygame.sprite.Sprite.__init__(self)
+		self.image = pygame.transform.scale(pygame.image.load('img/bloodmoon.png'), (100, 100))
+		self.rect = self.image.get_rect()
+		self.rect.center = [x, y]
+	
+	def update(self, bosscheck):
+
+		print(self.rect.x)
+		if self.rect.x > 680 or bosscheck == False:
+			self.rect.x -= scroll_speed
+			if self.rect.right < 0:
+				self.kill()
+
+class Cloud(pygame.sprite.Sprite):
+
+	def __init__(self, x, y):
+		pygame.sprite.Sprite.__init__(self)
+		self.image = pygame.transform.scale(pygame.image.load('img/clouds.png'), (288*2, 112*2))
+		self.rect = self.image.get_rect()
+		self.rect.center = [x, y]
+	
+	def update(self):
+
+		self.rect.x -= scroll_speed - 1
+		if self.rect.right < 0:
+			self.kill()
+
+class Minion(pygame.sprite.Sprite):
+
 	def __init__(self, x, y, heart):
 		pygame.sprite.Sprite.__init__(self)
 		self.index = 0
 		self.counter = 0
 		self.heart = heart
-		self.images = [pygame.transform.scale(pygame.image.load(f"img/crow{num}.png"), (60, 75)) for num in range (1, 7)]
+		self.images = [pygame.transform.scale(pygame.image.load(f"img/crows/crow{num}.png"), (60, 75)) for num in range (1, 7)]
 		self.images = [pygame.transform.rotate(image, 125) for image in self.images]
 		self.image = self.images[self.index]
 		self.rect = self.image.get_rect()
@@ -326,7 +423,7 @@ class Minion(pygame.sprite.Sprite):
 
 	def update(self):
 
-		self.rect.x -= scroll_speed + 3
+		self.rect.x -= scroll_speed + 4
 		if self.rect.right < 0:
 			self.kill()
 		
@@ -375,12 +472,15 @@ bullet_group = pygame.sprite.Group()
 item_group = pygame.sprite.Group()
 boss_group = pygame.sprite.Group()
 crow_group = pygame.sprite.Group()
+flame_group = pygame.sprite.Group()
+warning_group = pygame.sprite.Group()
+bloodmoon_group = pygame.sprite.Group()
+cloud_group = pygame.sprite.Group()
 
 flappy = Bird(100, int(screen_height / 2), heart, bullet_frequency, damage)
 bird_group.add(flappy)
 
-boss = SpriteSheet(start_postion_x, 450, heart_boss, 0)
-
+boss = Gameboss(start_postion_x, 450, heart_boss, 0)
 
 #create restart button instance
 button = Button(screen_width // 2 - 50, screen_height // 2 - 100, button_img)
@@ -394,6 +494,10 @@ while run:
 	screen.blit(bg, (0,0))
 
 	#draw
+	bloodmoon_group.draw(screen)
+	cloud_group.draw(screen)
+	flame_group.draw(screen)
+	warning_group.draw(screen)
 	item_group.draw(screen)
 	pipe_group.draw(screen)
 	boss_group.draw(screen)
@@ -431,9 +535,10 @@ while run:
 	#look for collision and cooldown for immortal  
 	if immortal > 0:
 		immortal -= 1
-	elif pygame.sprite.groupcollide(bird_group, pipe_group, False, False) or pygame.sprite.groupcollide(bird_group, crow_group, False, False):
+	elif pygame.sprite.groupcollide(bird_group, pipe_group, False, False) or pygame.sprite.groupcollide(bird_group, crow_group, False, False)\
+		or pygame.sprite.groupcollide(bird_group, flame_group, False, False):
 		flappy.heart -= 1
-		immortal = 35 
+		immortal = 35
 	if flappy.rect.top < 0:
 		flappy.heart = 0
 	#once the bird has hit the ground it's game over and no longer flying
@@ -443,6 +548,11 @@ while run:
 
 	if flying == True and game_over == False:
 		time_now = pygame.time.get_ticks()
+		if time_now - last_cloud > cloud_frequency:
+			clouds = Cloud(1300, 130)
+			cloud_group.add(clouds)
+			cloud_frequency = random.randrange(5000, 7001, 1000)
+			last_cloud = time_now
 		#generate new pipes
 		if time_now - last_pipe > pipe_frequency and boss_check == False:
 			random_drop = random.randint(1, 100)
@@ -456,7 +566,11 @@ while run:
 				item_box = Itembox("Heart", btm_pipe.rect.x + 40, btm_pipe.rect.y - 80)
 				item_group.add(item_box)
 			last_pipe = time_now
+			last_item = last_pipe
+			last_crow = last_pipe
+			last_flame = last_pipe
 		elif boss_check and score == score_meet_boss - (stack_score_boss - 2):
+			check_generate = False
 			#generate bullet
 			if time_now - last_pipe > flappy.bullet_frequency:
 				shoot = Bullet(bird_group.sprites()[0].rect.centerx, \
@@ -480,17 +594,37 @@ while run:
 				crow_height = random.randint(100, 700)
 				crow = Minion(900, crow_height, crow_heart)
 				crow_group.add(crow)
-				crow_frequency = random.randrange(1000, 2501, 1000)
+				crow_frequency = random.randrange(1000, 2501, 100)
 				last_crow = time_now
+			if time_now - last_flame > flame_frequency:
+				warning_group.empty()
+				flame_height = random.randrange(150, 730, 288)
+				flame_attack = BlueFlame(boss.rect.x + 100, boss.rect.y + 100)
+				flame_group.add(flame_attack)
+				flame_frequency = random.randrange(3000, 5001, 1000)
+				warning_check = False
+				last_flame = time_now
+			if time_now - last_flame > flame_frequency - 1000 and warning_check == False:
+				warn = Warning(boss.rect.x, boss.rect.y)
+				warning_group.add(warn)
+				warning_check = True
 		#generate boss
 		elif boss_check and score == score_meet_boss - stack_score_boss:
 			boss_group.add(boss)
+			if check_generate == False:
+				moon = bloodmoon(1000, 90)
+				bloodmoon_group.add(moon)
+				check_generate = True
 
+		cloud_group.update()
+		bloodmoon_group.update(boss_check)
+		warning_group.update()
 		crow_group.update()
 		boss_group.update(round)
 		item_group.update()
 		bullet_group.update()
 		pipe_group.update()
+		flame_group.update()
 
 		ground_scroll -= scroll_speed
 		if abs(ground_scroll) > 35:
@@ -513,6 +647,9 @@ while run:
 			round = 1
 			immortal = 0
 			boss_check = False
+			check_generate = False
+			flame_frequency = start_flame_frequency
+			warning_check = False
 			score_meet_boss = star_score_meet_boss
 
 	# kill boss
@@ -520,6 +657,7 @@ while run:
 		boss_check = False
 		round += 1
 		score += kill_boss(round)
+		flame_frequency = start_flame_frequency
 
 	for event in pygame.event.get():
 		if event.type == pygame.QUIT:
