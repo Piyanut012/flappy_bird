@@ -388,7 +388,6 @@ class bloodmoon(pygame.sprite.Sprite):
 	
 	def update(self, bosscheck):
 
-		print(self.rect.x)
 		if self.rect.x > 680 or bosscheck == False:
 			self.rect.x -= scroll_speed
 			if self.rect.right < 0:
