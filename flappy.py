@@ -39,7 +39,7 @@ check = False
 
 #load images
 bg = pygame.image.load('img/nightbg1.png')
-ground_img = pygame.image.load('img/ground.png')
+ground_img = pygame.image.load('img/groundtest.png')
 button_img = pygame.image.load('img/restart.png')
 heart_img = pygame.image.load('img/heart.png')
 
