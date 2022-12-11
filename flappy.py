@@ -198,7 +198,6 @@ class Bird(pygame.sprite.Sprite):
 					self.index = 0
 				self.image = self.images[self.index]
 
-
 			#rotate the bird
 			self.image = pygame.transform.rotate(self.images[self.index], self.vel * -2)
 		else:
@@ -349,6 +348,7 @@ class BlueFlame(pygame.sprite.Sprite):
 			if self.index >= len(self.images):
 					self.index = 0 
 		self.image = self.images[self.index]
+		#enlarged size
 		if self.scale <= 1:
 			self.image = pygame.transform.scale(self.image, (self.image.get_width()*self.scale, self.image.get_height()*self.scale))
 			self.scale += 0.025
@@ -375,6 +375,7 @@ class Warning(pygame.sprite.Sprite):
 			if self.index >= len(self.images):
 					self.index = 0
 		self.image = self.images[self.index]
+		#follow boss
 		self.rect.x = boss.rect.x - 50
 		self.rect.y = boss.rect.y + 30
 
@@ -547,6 +548,7 @@ while run:
 
 	if flying == True and game_over == False:
 		time_now = pygame.time.get_ticks()
+		#generate cloud
 		if time_now - last_cloud > cloud_frequency:
 			clouds = Cloud(1300, 130)
 			cloud_group.add(clouds)
@@ -595,6 +597,7 @@ while run:
 				crow_group.add(crow)
 				crow_frequency = random.randrange(1000, 2501, 100)
 				last_crow = time_now
+			#generate flame
 			if time_now - last_flame > flame_frequency:
 				warning_group.empty()
 				flame_height = random.randrange(150, 730, 288)
@@ -603,6 +606,7 @@ while run:
 				flame_frequency = random.randrange(3000, 5001, 1000)
 				warning_check = False
 				last_flame = time_now
+			#generate warning
 			if time_now - last_flame > flame_frequency - 1000 and warning_check == False:
 				warn = Warning(boss.rect.x, boss.rect.y)
 				warning_group.add(warn)
@@ -610,6 +614,7 @@ while run:
 		#generate boss
 		elif boss_check and score == score_meet_boss - stack_score_boss:
 			boss_group.add(boss)
+			#generate moon
 			if check_generate == False:
 				moon = bloodmoon(1000, 90)
 				bloodmoon_group.add(moon)
