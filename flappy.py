@@ -67,7 +67,7 @@ score_meet_boss = 3
 star_score_meet_boss = score_meet_boss
 stack_score_boss = 30
 score_kill_boss = int(stack_score_boss/2)
-heart_boss = 20
+heart_boss = 100
 start_heart_boss = heart_boss
 start_postion_x = 1000
 
