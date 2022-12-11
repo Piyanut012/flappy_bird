@@ -112,6 +112,7 @@ hurt = mixer.Sound('img/sound/hit.wav')
 show = mixer.Sound('img/sound/appear.wav')
 lost = mixer.Sound('img/sound/explosive.wav')
 magic = mixer.Sound('img/sound/magic.wav')
+point = mixer.Sound('img/sound/point.wav')
 warning = mixer.Sound('img/sound/bosshurt.wav')
 
 check_sound = False
@@ -556,6 +557,7 @@ while run:
 		if pass_pipe == True:
 			if bird_group.sprites()[0].rect.left > pipe_group.sprites()[0].rect.right:
 				score += 1
+				point.play()
 				pass_pipe = False
 	draw_text(str(score), font, WHITE, int(screen_width / 2), 20)
 
