@@ -1,6 +1,7 @@
 import pygame
 from pygame.locals import *
 import random
+from pygame import mixer
 
 "This is Aum"
 "This is Flame"
@@ -102,6 +103,21 @@ item_boxes = {
 	'X2'		: x2_img
 }
 
+#sound
+flip = mixer.Sound('img/sound/fly.wav')
+hit = mixer.Sound('img/sound/unknown.wav')
+pick = mixer.Sound('img/Sound/upgrade.wav')
+heal = mixer.Sound('img/sound/heal.wav')
+hurt = mixer.Sound('img/sound/hit.wav')
+show = mixer.Sound('img/sound/appear.wav')
+lost = mixer.Sound('img/sound/explosive.wav')
+magic = mixer.Sound('img/sound/magic.wav')
+warning = mixer.Sound('img/sound/bosshurt.wav')
+
+check_sound = False
+song = mixer.Sound('img/sound/background long.wav')
+dead = mixer.Sound('img/sound/gameover.wav')
+
 #function for outputting text onto the screen
 def draw_text(text, font, text_col, x, y):
 	img = font.render(text, True, text_col)
@@ -128,6 +144,7 @@ def kill_boss(roundz):
 	boss_group.empty()
 	bullet_group.empty()
 	item_group.empty()
+	warning_group.empty()
 	flappy.heart += 1
 	boss.heart = start_heart_boss * roundz
 	boss.rect.x = start_postion_x
@@ -184,6 +201,7 @@ class Bird(pygame.sprite.Sprite):
 			if pygame.mouse.get_pressed()[0] == 1 and self.clicked == False:
 				self.clicked = True
 				self.vel = -10
+				flip.play()
 			if pygame.mouse.get_pressed()[0] == 0:
 				self.clicked = False
 
@@ -251,6 +269,8 @@ class Bullet(pygame.sprite.Sprite):
 		self.image = pygame.image.load('img/rice.png')
 		self.rect = self.image.get_rect()
 		self.rect.center = [x, y]
+		shoot = mixer.Sound('img/sound/shot.wav')
+		shoot.play()
 
 	def update(self):
 		self.rect.x += 10
@@ -259,9 +279,11 @@ class Bullet(pygame.sprite.Sprite):
 		# damage
 		elif pygame.sprite.collide_rect(self, boss):
 			boss.heart -= flappy.damage
+			hit.play()
 			self.kill()
 		elif pygame.sprite.collide_rect(self, crow):
 			crow.heart -= flappy.damage
+			hit.play()
 			self.kill()
 
 #create sprite class and get image sprites
@@ -352,6 +374,7 @@ class BlueFlame(pygame.sprite.Sprite):
 		if self.scale <= 1:
 			self.image = pygame.transform.scale(self.image, (self.image.get_width()*self.scale, self.image.get_height()*self.scale))
 			self.scale += 0.025
+			magic.play()
 
 class Warning(pygame.sprite.Sprite):
 
@@ -369,6 +392,7 @@ class Warning(pygame.sprite.Sprite):
 		#animation
 		self.counter += 1
 		cooldown = 3
+		warning.play()
 		if self.counter > cooldown:
 			self.counter = 0
 			self.index += 1
@@ -457,12 +481,15 @@ class Itembox(pygame.sprite.Sprite):
 		elif pygame.sprite.collide_rect(self, flappy):
 			if self.item_type == "Heart" and flappy.heart < start_heart:
 				flappy.heart += 1
+				heal.play()
 				self.kill()
 			elif self.item_type == "Lightning":
 				flappy.bullet_frequency = flappy.bullet_frequency//2
+				pick.play()
 				self.kill()
 			elif self.item_type == "X2":
 				flappy.damage = flappy.damage*2
+				pick.play()
 				self.kill()
 
 #group
@@ -539,6 +566,7 @@ while run:
 		or pygame.sprite.groupcollide(bird_group, flame_group, False, False):
 		flappy.heart -= 1
 		immortal = 35
+		hurt.play()
 	if flappy.rect.top < 0:
 		flappy.heart = 0
 	#once the bird has hit the ground it's game over and no longer flying
@@ -614,6 +642,7 @@ while run:
 		#generate boss
 		elif boss_check and score == score_meet_boss - stack_score_boss:
 			boss_group.add(boss)
+			show.play()
 			#generate moon
 			if check_generate == False:
 				moon = bloodmoon(1000, 90)
@@ -644,6 +673,10 @@ while run:
 	# check for game over and reset
 	if flappy.heart == 0:
 		game_over = True
+		song.stop()
+		if check_sound == False:
+			dead.play()
+			check_sound == True
 	if game_over == True:
 		if button.draw():
 			game_over = False
@@ -655,6 +688,8 @@ while run:
 			flame_frequency = start_flame_frequency
 			warning_check = False
 			score_meet_boss = star_score_meet_boss
+			check_sound == False
+			dead.stop()
 
 	# kill boss
 	if boss.heart <= 0:
@@ -662,12 +697,15 @@ while run:
 		round += 1
 		score += kill_boss(round)
 		flame_frequency = start_flame_frequency
+		lost.play()
+		warning_check = False
 
 	for event in pygame.event.get():
 		if event.type == pygame.QUIT:
 			run = False
 		if event.type == pygame.MOUSEBUTTONDOWN and flying == False and game_over == False:
 			flying = True
+			song.play(-1)
 
 	pygame.display.update()
 
