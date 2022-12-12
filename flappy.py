@@ -111,6 +111,7 @@ heal = mixer.Sound('img/sound/heal.wav')
 hurt = mixer.Sound('img/sound/hit.wav')
 show = mixer.Sound('img/sound/appear.wav')
 lost = mixer.Sound('img/sound/explosive.wav')
+lost.set_volume(20)
 magic = mixer.Sound('img/sound/magic.wav')
 point = mixer.Sound('img/sound/point.wav')
 warning = mixer.Sound('img/sound/bosshurt.wav')
@@ -118,6 +119,7 @@ warning = mixer.Sound('img/sound/bosshurt.wav')
 check_sound = False
 song = mixer.Sound('img/sound/background long.wav')
 dead = mixer.Sound('img/sound/gameover.wav')
+theme = mixer.Sound('img/sound/boss theme.wav')
 
 #function for outputting text onto the screen
 def draw_text(text, font, text_col, x, y):
@@ -649,6 +651,8 @@ while run:
 			if check_generate == False:
 				moon = bloodmoon(1000, 90)
 				bloodmoon_group.add(moon)
+				song.set_volume(0)
+				theme.play(-1)
 				check_generate = True
 
 		cloud_group.update()
@@ -676,6 +680,7 @@ while run:
 	if flappy.heart == 0:
 		game_over = True
 		song.stop()
+		theme.stop()
 		if check_sound == False:
 			dead.play()
 			check_sound == True
@@ -700,6 +705,8 @@ while run:
 		score += kill_boss(round)
 		flame_frequency = start_flame_frequency
 		lost.play()
+		theme.stop()
+		song.set_volume(10)
 		warning_check = False
 
 	for event in pygame.event.get():
@@ -707,6 +714,7 @@ while run:
 			run = False
 		if event.type == pygame.MOUSEBUTTONDOWN and flying == False and game_over == False:
 			flying = True
+			song.set_volume(10)
 			song.play(-1)
 
 	pygame.display.update()
